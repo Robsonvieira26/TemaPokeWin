@@ -33,6 +33,11 @@ def gen_text(text, name="x.ino"):
         return read(out)
 
 
+def lf(text):
+    """Normaliza CRLF -> LF: o checkout do Windows (autocrlf) pode entregar a fixture com CRLF."""
+    return text.replace("\r\n", "\n")
+
+
 def blocks(out):
     """Lista de blocos de prototipos (cada um uma lista de linhas)."""
     res, cur = [], None
@@ -74,7 +79,7 @@ class FixtureTests(unittest.TestCase):
         cls.out = gen_text(cls.src, "exemplo.ino")
 
     def test_injeta_arduino_h_no_topo(self):
-        lines = self.out.split("\n")
+        lines = lf(self.out).split("\n")
         self.assertEqual(lines[0], "#include <Arduino.h>")
         self.assertEqual(lines[1], '#line 1 "exemplo.ino"')
 
@@ -114,8 +119,8 @@ class FixtureTests(unittest.TestCase):
         self.assertNotIn("=", todos)
 
     def test_line_directives_apontam_para_o_original(self):
-        orig = self.src.split("\n")
-        out = self.out.split("\n")
+        orig = lf(self.src).split("\n")
+        out = lf(self.out).split("\n")
         achou = 0
         for k, ln in enumerate(out):
             m = re.match(r'^#line (\d+) "exemplo.ino"$', ln)
@@ -123,6 +128,13 @@ class FixtureTests(unittest.TestCase):
                 achou += 1
                 self.assertEqual(out[k + 1], orig[int(m.group(1)) - 1])
         self.assertEqual(achou, 3)  # topo + 2 blocos
+
+    def test_fim_de_linha_da_fixture_preservado(self):
+        # a saida usa exatamente o fim de linha da entrada (CRLF -> so CRLF; LF -> so LF)
+        if "\r\n" in self.src:
+            self.assertIsNone(re.search(r"(?<!\r)\n", self.out))
+        else:
+            self.assertNotIn("\r", self.out)
 
     def test_so_difere_pelas_linhas_injetadas(self):
         self.assertEqual(strip_injected(self.out), self.src)

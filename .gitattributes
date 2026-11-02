@@ -1,0 +1,2 @@
+# fixture: fim de linha fixo (LF) para os testes serem deterministicos no checkout do Windows
+tests/fixtures/*.ino text eol=lf

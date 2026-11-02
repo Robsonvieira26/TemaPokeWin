@@ -59,6 +59,10 @@ struct IGameHost {
   virtual void injectConsole(const char* line) = 0;
   virtual void save() = 0;                    // pet.flushSave()
   virtual bool wantsRestart() const = 0;      // upstream chamou ESP.restart()
+  virtual void clearFrameDirty() = 0;
+  virtual void setSoundEnabled(bool on) = 0;  // item "Som" da bandeja
+  virtual const char* petName() const = 0;    // tooltip da bandeja
+  virtual int petLevel() const = 0;
 };
 ```
 

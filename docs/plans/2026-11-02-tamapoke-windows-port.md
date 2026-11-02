@@ -1,3 +1,8 @@
+> **SUBSTITUIDO.** Este plano foi reescrito a partir do spec aprovado.
+> Use `docs/superpowers/plans/2026-11-01-tamapoke-windows-desktop-pet.md`.
+> Spec: `docs/superpowers/specs/2026-11-01-tamapoke-windows-port-design.md`.
+> Mantido so como registro do rascunho inicial.
+
 # TamaPoke para Windows: plano de implementação
 
 > **Para o Claude:** SUB-SKILL OBRIGATÓRIA: use `superpowers:executing-plans` (ou `superpowers:subagent-driven-development`) para executar este plano tarefa por tarefa, com `superpowers:test-driven-development` em cada passo de código.

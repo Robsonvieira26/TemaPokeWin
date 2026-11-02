@@ -91,13 +91,14 @@ struct IGameHost {
 
 ## 4. Ciclo de vida e política de tick
 
-Máquina de três estados no `app_shell`. O `game_host` só obedece.
+Máquina de **dois** estados no `app_shell` (`Visible` e `Hidden`). O `game_host` só obedece.
 
 | Estado | Como entra | `tick()` | Render | Áudio |
 |---|---|---|---|---|
 | `Visible` | janela na tela | contínuo: o firmware se auto-pacea (render a ~10 fps, 85 ms no minijogo; `delay(1)` entre passadas; toque lido a cada ~20 ms) | sim | sim |
 | `Hidden` | fechou a janela, bandeja "Esconder", ou logon com `--hidden` | 1 Hz, mais um `tick()` imediato após qualquer entrada ou ao mostrar | não | sim |
-| `ScreenOff` | F2 ou PWR curto | contínuo (o firmware já relaxa para `delay(20)` por passada e não renderiza) | janela preta (brilho 0) | sim |
+
+**Tela apagada não é estado do shell.** O firmware é dono dela (`screenOff` em `TamaPoke.ino`: o PWR curto a alterna; um toque a desliga de novo e o brilho vai a 0 sozinho). Um `ScreenOff` paralelo no shell dessincronizaria (F2 apaga, o usuário toca, o firmware acorda, o shell continuaria forçando preto). Então F2 só repassa o PWR curto ao firmware (`powerShortPress()`), o shell continua em `Visible` e apresenta o frame preto que o firmware produz; o firmware já relaxa para `delay(20)` por passada sem renderizar.
 
 - **`millis()` não desacelera.** Continua `SDL_GetTicks()` real. Em `Hidden` só chamamos
   `loop()` menos vezes; o upstream vê saltos de ~1000 ms, como já tolera quando a tela
@@ -107,7 +108,7 @@ Máquina de três estados no `app_shell`. O `game_host` só obedece.
   `tick()` extra deixa o upstream ver o epoch novo; a regra +1 nível/hora com teto de duas
   semanas é dele.
 - **Esperar de verdade:** em `Hidden`, `SDL_WaitEventTimeout` até o próximo evento ou 1 s.
-  Em `Visible` e `ScreenOff` não há espera do shell: o `delay()` do próprio firmware (via `SDL_Delay`)
+  Em `Visible` não há espera do shell: o `delay()` do próprio firmware (via `SDL_Delay`)
   segura a CPU. A cadência de 10 Hz do rascunho inicial foi **descartada**: o firmware foi escrito para
   o `loop()` girar continuamente e ler o toque a cada ~20 ms; chamá-lo a 10 Hz deixaria o toque e o
   arrasto com até 100 ms de latência.
@@ -145,7 +146,7 @@ Sem isso, um quadrado invisível de 466 px rouba cliques do desktop.
 | Botão direito arrastando | move a janela; nunca vira toque |
 | Botão direito clique seco | menu de contexto = menu da bandeja |
 | Roda do mouse | nada (upstream não usa) |
-| F2 | PWR curto → `ScreenOff` |
+| F2 | PWR curto (o firmware liga/desliga a tela) |
 | Setas | swipes, para quem prefere teclado |
 | F12 | console de debug (`STATS`, `LVL`, `HATCH`, `TIME <epoch>`, `WIPE`, ...) |
 | Esc | nada. Não fecha o app. |

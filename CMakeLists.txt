@@ -75,3 +75,7 @@ add_library(gfx_core STATIC
   third_party/Arduino_GFX/src/Arduino_DataBus.cpp
   third_party/Arduino_GFX/src/canvas/Arduino_Canvas.cpp)
 target_include_directories(gfx_core PRIVATE hal third_party/Arduino_GFX/src)
+
+# Gerador .ino -> .cpp (prototipos como o builder do Arduino). Teste stdlib unittest.
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+add_test(NAME gen_protos COMMAND ${Python3_EXECUTABLE} -I ${CMAKE_SOURCE_DIR}/tests/test_gen_protos.py)

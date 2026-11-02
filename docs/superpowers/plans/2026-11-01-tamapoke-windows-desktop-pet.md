@@ -256,7 +256,7 @@ Cada tarefa desta fase é TDD com o micro-framework do upstream (`upstream/test/
 Este é o ponto único de acoplamento entre HAL, host e testes (invariante do spec §3.2). Ele nasce antes de qualquer implementação.
 
 **Files:**
-- Create: `hal/hal_control.h`, `tests/test_main.cpp`
+- Create: `hal/hal_control.h`, `tests/framework.h`, `tests/test_main.cpp`
 - Modify: `CMakeLists.txt`
 
 - [ ] **Step 1: Escrever `hal/hal_control.h`**
@@ -313,25 +313,98 @@ static constexpr int HAL_SCREEN_W = 466;
 static constexpr int HAL_SCREEN_H = 466;
 ```
 
-- [ ] **Step 2: Escrever `tests/test_main.cpp`**
+- [ ] **Step 2: Escrever `tests/framework.h` (adaptador)**
+
+O framework do upstream expõe `TEST`, `TEST_KNOWN_ISSUE` e `CHECK`, `CHECK_EQ`, `CHECK_STREQ`, `CHECK_RANGE`, `CHECK_MSG` — **não** `ASSERT_*`. Os testes deste plano usam `ASSERT_TRUE`/`ASSERT_EQ`; este adaptador os mapeia, sem copiar o framework.
 
 ```cpp
-// Runner dos testes de HAL e de host. O framework do upstream fornece as macros;
-// este arquivo so chama o runner dele.
+// tests/framework.h
+#pragma once
+#include "../upstream/test/framework.h"
+
+#define ASSERT_TRUE(cond) CHECK(cond)
+#define ASSERT_EQ(a, b)   CHECK_EQ(a, b)
+```
+
+Os testes fazem `#include "framework.h"`, e um include com aspas procura primeiro na pasta do arquivo que inclui, então resolvem para este adaptador. `upstream/test` **não** entra no include path do alvo (veja o Step 5), para o shim do upstream nunca ficar ao alcance.
+
+- [ ] **Step 3: Escrever `tests/test_main.cpp` (runner próprio)**
+
+O `upstream/test/main.cpp` **não serve** aqui: ele inclui o shim (`mockSerialSilence`, `mockSetMillis`, `mockClearForcedRandom`). Este runner replica a lógica dele sem o shim.
+
+```cpp
+// tests/test_main.cpp
 #include "framework.h"
+#include <cstdio>
+#include <cstring>
+#include <sstream>
+#include <string>
+#include <vector>
+
+std::vector<TestCase>& testRegistry() {
+  static std::vector<TestCase> reg;
+  return reg;
+}
+
+int gAssertCount = 0;
+static std::vector<std::string> gFailures;
+
+void testFail(const char* file, int line, const std::string& msg) {
+  const char* a = std::strrchr(file, '/');
+  const char* b = std::strrchr(file, '\\');
+  const char* base = a > b ? a : b;
+  std::ostringstream os;
+  os << (base ? base + 1 : file) << ":" << line << ": " << msg;
+  gFailures.push_back(os.str());
+}
 
 int main(int argc, char** argv) {
-  return testRunAll(argc, argv);
+  const char* filter = argc > 1 ? argv[1] : nullptr;
+  int passed = 0, failed = 0, skipped = 0, xfail = 0, xpass = 0;
+  std::string lastSuite;
+  std::vector<std::string> failedNames;
+
+  for (TestCase& tc : testRegistry()) {
+    std::string full = tc.suite + "." + tc.name;
+    if (filter && full.find(filter) == std::string::npos) { ++skipped; continue; }
+    if (tc.suite != lastSuite) {
+      std::printf("\n%s\n", tc.suite.c_str());
+      lastSuite = tc.suite;
+    }
+    gFailures.clear();
+    tc.fn();
+    if (tc.knownIssue) {
+      if (gFailures.empty()) {
+        std::printf("  XPASS %s (remova TEST_KNOWN_ISSUE)\n", tc.name.c_str());
+        ++xpass;
+      } else {
+        std::printf("  KNOWN %s -- %s\n", tc.name.c_str(), tc.note.c_str());
+        ++xfail;
+      }
+      continue;
+    }
+    if (gFailures.empty()) {
+      std::printf("  ok   %s\n", tc.name.c_str());
+      ++passed;
+    } else {
+      std::printf("  FAIL %s\n", tc.name.c_str());
+      for (const auto& f : gFailures) std::printf("        %s\n", f.c_str());
+      ++failed;
+      failedNames.push_back(full);
+    }
+  }
+
+  std::printf("\n%d tests, %d asserts, %d passed, %d failed",
+              passed + failed + xfail + xpass, gAssertCount, passed, failed);
+  if (xfail) std::printf(", %d bugs conhecidos", xfail);
+  if (skipped) std::printf(", %d filtrados", skipped);
+  std::printf("\n");
+  for (const auto& n : failedNames) std::printf("  - %s\n", n.c_str());
+  return failed ? 1 : 0;
 }
 ```
 
-- [ ] **Step 3: Conferir o nome real do runner do framework**
-
-Run:
-```bash
-grep -nE "int +test|RUN_ALL|runAll|main\(" upstream/test/framework.h
-```
-Expected: a assinatura real do runner. Ajuste o `main` acima para chamar exatamente o que o framework expõe (pode ser `testRunAll`, `runAllTests`, ou o framework já pode fornecer o próprio `main` — nesse caso, apague `tests/test_main.cpp` e não o adicione ao alvo).
+Diferença deliberada em relação ao runner do upstream: **não há reset de estado entre testes** (o do upstream zera o relógio e o random do shim). Aqui cada teste que depende de relógio, offset de RTC ou diretório de dados deve zerar o próprio estado no início — os testes deste plano já fazem isso (`halAdvanceForTest(0)`, `halSetRtcOffsetForTest(0)`, `halSetDataDir(...)`).
 
 - [ ] **Step 4: Adicionar o alvo `tamapoke_tests` ao `CMakeLists.txt`**
 
@@ -339,12 +412,17 @@ Expected: a assinatura real do runner. Ajuste o `main` acima para chamar exatame
 file(GLOB HAL_SRC CONFIGURE_DEPENDS hal/*.cpp)
 file(GLOB TEST_SRC CONFIGURE_DEPENDS tests/*.cpp)
 add_executable(tamapoke_tests ${TEST_SRC} ${HAL_SRC})
-target_include_directories(tamapoke_tests PRIVATE hal upstream upstream/test src)
+target_include_directories(tamapoke_tests PRIVATE hal upstream src)
 target_link_libraries(tamapoke_tests PRIVATE SDL3::SDL3)
 add_test(NAME tamapoke COMMAND tamapoke_tests)
+
+# SDL3 e DLL compartilhada: sem isto o exe de teste nao abre ("Erro do sistema").
+add_custom_command(TARGET tamapoke_tests POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+          $<TARGET_FILE:SDL3::SDL3> $<TARGET_FILE_DIR:tamapoke_tests>)
 ```
 
-`upstream/test` entra só pelo `framework.h`; `upstream/test/shim` **não** entra.
+`upstream/test` **não** entra no include path: o `framework.h` do upstream chega pelo adaptador `tests/framework.h`, e o shim nunca fica ao alcance.
 
 - [ ] **Step 5: Compilar e rodar**
 
@@ -359,7 +437,7 @@ Expected: roda com 0 testes e sai com código 0.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add hal/hal_control.h tests/test_main.cpp CMakeLists.txt
+git add hal/hal_control.h tests/framework.h tests/test_main.cpp CMakeLists.txt
 git commit -m "feat(hal): hal_control.h e alvo de testes contra a HAL"
 ```
 
@@ -4255,6 +4333,8 @@ void AppShell::pumpEvents() {
 Nota sobre as setas: um swipe por teclado precisa de três `tick()` entre `touchDown`, `touchMove` e `touchUp` para o upstream perceber o gesto. Se o teste manual mostrar que o swipe não registra, converta as setas num gesto com estado (uma struct `SwipeSimulado` que entrega um passo por `tick()`) — e escreva o teste dela antes.
 
 - [ ] **Step 8: Rodar os testes e compilar o alvo `tamapoke`**
+
+**Substitua** o `add_executable(tamapoke WIN32 src/main.cpp)` e o `target_link_libraries(tamapoke ...)` da Task 1 pelo bloco abaixo (nao crie um segundo alvo `tamapoke`). Mantenha o `add_custom_command(TARGET tamapoke POST_BUILD ... copy_if_different $<TARGET_FILE:SDL3::SDL3> ...)` que a Task 1 adicionou: ele copia `SDL3.dll` para junto do exe.
 
 ```cmake
 add_executable(tamapoke WIN32

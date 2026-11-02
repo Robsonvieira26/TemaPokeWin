@@ -24,7 +24,7 @@ cmake --build build --config Release
 ```
 
 O executavel fica em `build/<Config>/tamapoke.exe`, junto de `SDL3.dll` e da pasta
-`sdcard/` (sprites). Copie essas tres coisas juntas para distribuir.
+`sdcard/` (sprites). Para distribuir, use `tools/package.ps1` (veja "Empacotamento e distribuicao").
 
 Testes:
 
@@ -79,6 +79,58 @@ inicializacao. Desative em "Iniciar com o Windows" no menu da bandeja, que remov
 valor. `--no-autostart` faz o programa nao mexer nesse registro naquela execucao
 (util em testes).
 
+## Empacotamento e distribuicao
+
+Depois de compilar em Release:
+
+```powershell
+powershell -File tools/package.ps1                 # zip sem sprites -> dist/TamaPoke-<versao>-win64.zip
+powershell -File tools/package.ps1 -WithSprites    # zip pessoal    -> dist/TamaPoke-<versao>-win64-sprites.zip
+```
+
+Opcoes: `-Config Release`, `-BuildDir build`, `-OutDir dist`. A versao vem de
+`project(... VERSION ...)` no `CMakeLists.txt`. Cada zip tem uma unica pasta raiz
+`TamaPoke-<versao>-win64/` com `tamapoke.exe`, `SDL3.dll`, `LICENSE`, `CREDITS.md` e
+`README.md`; o zip com sprites traz tambem `sdcard/mons/` (303 arquivos). Para instalar
+sem o script: `cmake --install build --config Release --prefix <pasta> --component app`
+(e `--component sprites` para os sprites).
+
+### Sprites (politica)
+
+Os sprites dos Pokemon sao CC BY-NC 4.0, **apenas uso pessoal e nao comercial**, e o
+upstream recomenda distribuir so o codigo e deixar cada usuario obter os sprites
+(veja [CREDITS.md](CREDITS.md)). Por isso o pacote publico (o que o CI gera) **nao
+inclui sprites**; o `-WithSprites` serve para uso pessoal e nao deve ser publicado.
+Sem sprites o programa abre normalmente e usa os sprites embutidos do firmware.
+
+Para adicionar os sprites: coloque a pasta `mons\` dentro de `sdcard\` ao lado do
+`tamapoke.exe` (ou aponte outra pasta com `--sd-root <pasta>`). Os arquivos (`pNNN.bin`,
+`psNNN.bin` e `thumbs.bin`) sao gerados pelas ferramentas do upstream, a partir do
+PMD SpriteCollab: no repositorio do TamaPoke, `python3 tools/pack_pmd.py` e
+`python3 tools/make_thumbs.py` produzem `tools/sdcard/mons/` (veja a secao "Generate and
+load the sprites yourself" de `upstream/README.md`). Neste repositorio essa pasta ja vem
+no submodulo `upstream/tools/sdcard/mons`, e o build copia para `build/<Config>/sdcard/mons`.
+
+### Instalador (Inno Setup)
+
+`installer/tamapoke.iss` (Inno Setup 6) e compilado so no CI de tags `v*` ou onde o Inno
+Setup estiver instalado (o instalador nao e construido nesta maquina de desenvolvimento):
+
+```powershell
+iscc /DAppVersion=0.1.0 /DSourceDir=<pasta de staging impressa pelo package.ps1> installer\tamapoke.iss
+```
+
+Comportamento: instalacao por usuario, sem administrador (padrao em
+`%LOCALAPPDATA%\Programs\TamaPoke`); atalho no Menu Iniciar e, opcionalmente, na area de
+trabalho; a tarefa "Iniciar o TamaPoke com o Windows" (marcada por padrao) grava o valor
+`TamaPoke` em `Run`, e, se desmarcada, cria `settings.json` com `autostart: false` (se
+ainda nao existir) para o app nao reativar a inicializacao; antes de instalar,
+atualizar ou desinstalar, o instalador chama `tamapoke.exe --quit` para fechar o
+programa que estiver rodando. Ao desinstalar, remove o valor de inicializacao e **mantem
+o seu bicho e configuracoes** em `%APPDATA%\TamaPoke` a menos que voce responda "Sim" a
+pergunta (desinstalacao silenciosa sempre mantem). O instalador publicado pelo CI tambem
+nao inclui sprites; o CI so gera artefatos, nunca publica uma Release.
+
 ## Estrutura
 
 - `upstream/`: firmware TamaPoke (submodulo, intocado).
@@ -86,7 +138,8 @@ valor. `--no-autostart` faz o programa nao mexer nesse registro naquela execucao
 - `hal/`: emulacao do hardware/Arduino (tela, toque, RTC, SD, audio, preferencias).
 - `src/`: shell do desktop pet; `src/win/` tem bandeja, autostart, instancia unica e console.
 - `assets/`: icone, recursos do Windows (`app.rc`) e a fonte do icone.
-- `tools/`: geradores (`make_icon.py`, `gen_protos.py`, `extract_u8g2_fonts.py`).
+- `tools/`: geradores (`make_icon.py`, `gen_protos.py`, `extract_u8g2_fonts.py`) e `package.ps1`.
+- `installer/`: script do instalador Inno Setup.
 - `tests/`: testes (micro-framework proprio em C++ e `unittest` para os scripts Python).
 - `docs/`: decisoes, planos e especificacoes.
 

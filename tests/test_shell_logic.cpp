@@ -1,5 +1,6 @@
 // tests/test_shell_logic.cpp - logica pura do shell (sem SDL de janela, sem AppShell).
 #include "framework.h"
+#include "wall_clock.h"
 #include "shell_logic.h"
 #include "game_host.h"
 #include "win/tray.h"
@@ -326,7 +327,8 @@ TEST(shell_swipe, firmware_real_abre_a_dex) {
   fs::create_directories(dir, ec);
   SDL_SetHint(SDL_HINT_AUDIO_DRIVER, "dummy");
   halTouchUp();
-  halSetRtcOffsetForTest(0);
+  // meio-dia local: nuvens animadas (h < 18) em qualquer hora real do dia
+  RtcHoraLocalGuard meioDia(12, 30);
   IGameHost* h = createGameHost(dir.string().c_str(), "upstream/tools/sdcard");
   h->boot();
   assentar(h, 600);

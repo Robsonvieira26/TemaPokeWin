@@ -44,14 +44,12 @@ func _make_bar(fill_color: Color) -> ProgressBar:
 	bar.show_percentage = false
 	bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bar.custom_minimum_size   = Vector2(0, 12)
-	# colorir via StyleBoxFlat
 	var fill := StyleBoxFlat.new()
 	fill.bg_color = fill_color
-	fill.corner_radius_top_left     = 3
-	fill.corner_radius_top_right    = 3
-	fill.corner_radius_bottom_left  = 3
-	fill.corner_radius_bottom_right = 3
 	bar.add_theme_stylebox_override("fill", fill)
+	var bg := StyleBoxFlat.new()
+	bg.bg_color = Color(0.12, 0.12, 0.12)
+	bar.add_theme_stylebox_override("background", bg)
 	return bar
 
 func _make_col(label_text: String, bar: ProgressBar) -> VBoxContainer:

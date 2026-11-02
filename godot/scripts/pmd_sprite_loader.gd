@@ -63,13 +63,21 @@ static func load_pokemon_frames(species_id: String) -> SpriteFrames:
 		if spec == null:
 			continue
 		var path := "%s/%s-Anim.png" % [base, anim_name]
-		var tex := load(path) as Texture2D
+		var tex := _load_tex(path)
 		if tex == null:
 			push_warning("PmdSpriteLoader: arquivo não encontrado: %s" % path)
 			continue
 		_add_anim(frames, anim_name, tex, spec)
 
 	return frames
+
+static func _load_tex(res_path: String) -> Texture2D:
+	# Usa Image.load_from_file para funcionar sem cache de import do editor.
+	var abs := ProjectSettings.globalize_path(res_path)
+	var img := Image.load_from_file(abs)
+	if img == null:
+		return null
+	return ImageTexture.create_from_image(img)
 
 static func _add_anim(
 	frames: SpriteFrames,

@@ -3,8 +3,16 @@
 #include <cstdlib>
 #include <cstdio>
 #include <ctime>
+#include <algorithm>
 #include "WString.h"
 #include "HardwareSerial.h"
+#include "pgmspace.h"
+#include "Print.h"
+
+// MSVC nao entende atributos GNU (Arduino_GFX usa __attribute__((always_inline)))
+#ifdef _MSC_VER
+#define __attribute__(x)
+#endif
 
 #define IRAM_ATTR
 #define HIGH 1
@@ -15,6 +23,10 @@
 
 // MSVC nao tem gmtime_r (POSIX)
 inline std::tm* gmtime_r(const std::time_t* t, std::tm* out) { return gmtime_s(out, t) == 0 ? out : nullptr; }
+
+// Arduino.h real define min/max como macros; aqui, as templates da std.
+using std::min;
+using std::max;
 
 uint32_t millis();
 void delay(uint32_t ms);

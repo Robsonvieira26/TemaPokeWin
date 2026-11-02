@@ -66,3 +66,12 @@ set_tests_properties(tamapoke PROPERTIES WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 add_custom_command(TARGET tamapoke_tests POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_if_different
           $<TARGET_FILE:SDL3::SDL3> $<TARGET_FILE_DIR:tamapoke_tests>)
+
+# Nucleo real do Arduino_GFX (v1.6.9, submodulo) contra a nossa HAL. So compila;
+# a Task 11A liga ao resto. Decisao: docs/decisions/0001-canvas.md.
+add_library(gfx_core STATIC
+  third_party/Arduino_GFX/src/Arduino_GFX.cpp
+  third_party/Arduino_GFX/src/Arduino_G.cpp
+  third_party/Arduino_GFX/src/Arduino_DataBus.cpp
+  third_party/Arduino_GFX/src/canvas/Arduino_Canvas.cpp)
+target_include_directories(gfx_core PRIVATE hal third_party/Arduino_GFX/src)

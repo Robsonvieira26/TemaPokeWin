@@ -77,7 +77,7 @@ set(UPSTREAM_GAME_SRC
 # Testes contra a nossa HAL (nunca ve o shim do upstream; upstream/test fora do include path).
 file(GLOB HAL_SRC CONFIGURE_DEPENDS hal/*.cpp)
 file(GLOB TEST_SRC CONFIGURE_DEPENDS tests/*.cpp)
-add_executable(tamapoke_tests ${TEST_SRC} ${HAL_SRC} src/present.cpp src/game_host.cpp ${UPSTREAM_GAME_SRC} ${INO_GEN})
+add_executable(tamapoke_tests ${TEST_SRC} ${HAL_SRC} src/present.cpp src/game_host.cpp src/settings.cpp ${UPSTREAM_GAME_SRC} ${INO_GEN})
 target_include_directories(tamapoke_tests PRIVATE hal upstream src third_party/Arduino_GFX/src)
 add_dependencies(tamapoke_tests ino_gen)
 target_link_libraries(tamapoke_tests PRIVATE SDL3::SDL3 nlohmann_json::nlohmann_json gfx_core)

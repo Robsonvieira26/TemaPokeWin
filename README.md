@@ -47,6 +47,7 @@ Opcoes de linha de comando:
 | `--data-dir <pasta>` | pasta dos dados (save, configuracoes, log) |
 | `--sd-root <pasta>` | pasta do "cartao SD" com os sprites (padrao: `sdcard` ao lado do exe) |
 | `--instance <nome>` | nome da instancia unica (uma segunda execucao so avisa a primeira) |
+| `--quit` | pede a instancia em execucao para salvar e sair, espera ela fechar (ate 10 s; codigo 2 se nao fechar) e termina; sem instancia, nao faz nada (codigo 0). Usado por instalador/desinstalador |
 | `--console` | abre o console de debug ao iniciar |
 
 ## Controles

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.24)
+cmake_minimum_required(VERSION 3.26)  # 3.26: copy_directory_if_different
 project(tamapoke CXX)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -31,12 +31,6 @@ set(JSON_Install OFF CACHE INTERNAL "")
 set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
 FetchContent_MakeAvailable(nlohmann_json)
 unset(CMAKE_POLICY_VERSION_MINIMUM)
-
-add_executable(tamapoke WIN32 src/main.cpp)
-target_link_libraries(tamapoke PRIVATE SDL3::SDL3)
-
-add_custom_command(TARGET tamapoke POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:SDL3::SDL3> $<TARGET_FILE_DIR:tamapoke>)
 
 # Suite de testes do upstream (logica pura, sem SDL). Fontes espelham upstream/test/Makefile.
 add_executable(upstream_tests
@@ -77,7 +71,12 @@ set(UPSTREAM_GAME_SRC
 # Testes contra a nossa HAL (nunca ve o shim do upstream; upstream/test fora do include path).
 file(GLOB HAL_SRC CONFIGURE_DEPENDS hal/*.cpp)
 file(GLOB TEST_SRC CONFIGURE_DEPENDS tests/*.cpp)
-add_executable(tamapoke_tests ${TEST_SRC} ${HAL_SRC} src/present.cpp src/game_host.cpp src/settings.cpp src/shell_logic.cpp src/win/tray.cpp src/win/autostart.cpp src/win/single_instance.cpp src/win/window_mode.cpp ${UPSTREAM_GAME_SRC} ${INO_GEN})
+# Fontes do shell/jogo compartilhadas entre o app e os testes (sem main.cpp/app_shell.cpp).
+set(CORE_SRC
+  src/present.cpp src/game_host.cpp src/settings.cpp src/shell_logic.cpp
+  src/win/tray.cpp src/win/autostart.cpp src/win/single_instance.cpp src/win/window_mode.cpp
+  ${HAL_SRC} ${UPSTREAM_GAME_SRC} ${INO_GEN})
+add_executable(tamapoke_tests ${TEST_SRC} ${CORE_SRC})
 target_include_directories(tamapoke_tests PRIVATE hal upstream src third_party/Arduino_GFX/src)
 add_dependencies(tamapoke_tests ino_gen)
 target_link_libraries(tamapoke_tests PRIVATE SDL3::SDL3 nlohmann_json::nlohmann_json gfx_core)
@@ -93,6 +92,20 @@ set_tests_properties(tamapoke PROPERTIES WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 add_custom_command(TARGET tamapoke_tests POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_if_different
           $<TARGET_FILE:SDL3::SDL3> $<TARGET_FILE_DIR:tamapoke_tests>)
+
+# O app: desktop pet (janela redonda, sem borda, sempre no topo). /J: o firmware compila aqui.
+add_executable(tamapoke WIN32 src/main.cpp src/app_shell.cpp ${CORE_SRC})
+target_include_directories(tamapoke PRIVATE hal upstream src third_party/Arduino_GFX/src)
+add_dependencies(tamapoke ino_gen)
+target_link_libraries(tamapoke PRIVATE SDL3::SDL3 nlohmann_json::nlohmann_json gfx_core Shell32 Ole32)
+if (MSVC)
+  target_compile_options(tamapoke PRIVATE /J)
+endif()
+add_custom_command(TARGET tamapoke POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:SDL3::SDL3> $<TARGET_FILE_DIR:tamapoke>
+  COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
+          ${CMAKE_SOURCE_DIR}/upstream/tools/sdcard/mons $<TARGET_FILE_DIR:tamapoke>/sdcard/mons
+  COMMENT "Copiando SDL3.dll e sprites para a pasta de saida")
 
 # Nucleo real do Arduino_GFX (v1.6.9, submodulo) contra a nossa HAL. So compila;
 # a Task 11A liga ao resto. Decisao: docs/decisions/0001-canvas.md.

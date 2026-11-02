@@ -53,11 +53,33 @@ add_executable(upstream_tests
 target_include_directories(upstream_tests PRIVATE upstream/test/shim upstream)
 add_test(NAME upstream COMMAND upstream_tests)
 
+# Gerador .ino -> .cpp (prototipos como o builder do Arduino).
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+set(INO_GEN ${CMAKE_BINARY_DIR}/gen/TamaPoke.gen.cpp)
+add_custom_command(
+  OUTPUT ${INO_GEN}
+  COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/gen
+  COMMAND ${Python3_EXECUTABLE} -I ${CMAKE_SOURCE_DIR}/tools/gen_protos.py
+          ${CMAKE_SOURCE_DIR}/upstream/TamaPoke.ino -o ${INO_GEN}
+  DEPENDS ${CMAKE_SOURCE_DIR}/upstream/TamaPoke.ino ${CMAKE_SOURCE_DIR}/tools/gen_protos.py
+  COMMENT "Gerando TamaPoke.gen.cpp a partir do .ino")
+add_custom_target(ino_gen DEPENDS ${INO_GEN})
+set_source_files_properties(${INO_GEN} PROPERTIES GENERATED TRUE)
+
+# Fontes .cpp do jogo (reusadas pelo alvo do app em tarefa futura).
+set(UPSTREAM_GAME_SRC
+  upstream/pet.cpp
+  upstream/i18n.cpp
+  upstream/sdmon.cpp
+  upstream/rtcbat.cpp
+  upstream/audio.cpp)
+
 # Testes contra a nossa HAL (nunca ve o shim do upstream; upstream/test fora do include path).
 file(GLOB HAL_SRC CONFIGURE_DEPENDS hal/*.cpp)
 file(GLOB TEST_SRC CONFIGURE_DEPENDS tests/*.cpp)
-add_executable(tamapoke_tests ${TEST_SRC} ${HAL_SRC} src/present.cpp upstream/i18n.cpp upstream/sdmon.cpp upstream/rtcbat.cpp upstream/audio.cpp)
+add_executable(tamapoke_tests ${TEST_SRC} ${HAL_SRC} src/present.cpp src/game_host.cpp ${UPSTREAM_GAME_SRC} ${INO_GEN})
 target_include_directories(tamapoke_tests PRIVATE hal upstream src third_party/Arduino_GFX/src)
+add_dependencies(tamapoke_tests ino_gen)
 target_link_libraries(tamapoke_tests PRIVATE SDL3::SDL3 nlohmann_json::nlohmann_json gfx_core)
 # char sem sinal como no Xtensa do ESP32: o Arduino_GFX compara bytes UTF-8 (c >= 0xE0)
 # em getTextBounds(); com char com sinal (padrao do MSVC) o texto CJK mede errado.
@@ -84,7 +106,6 @@ if (MSVC)
   target_compile_options(gfx_core PRIVATE /J)  # ver comentario em tamapoke_tests
 endif()
 
-# Gerador .ino -> .cpp (prototipos como o builder do Arduino). Teste stdlib unittest.
-find_package(Python3 REQUIRED COMPONENTS Interpreter)
+# Testes stdlib unittest dos scripts Python.
 add_test(NAME gen_protos COMMAND ${Python3_EXECUTABLE} -I ${CMAKE_SOURCE_DIR}/tests/test_gen_protos.py)
 add_test(NAME extract_u8g2_fonts COMMAND ${Python3_EXECUTABLE} -I ${CMAKE_SOURCE_DIR}/tests/test_extract_u8g2_fonts.py)

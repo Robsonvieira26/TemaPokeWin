@@ -16,6 +16,7 @@ const char* halSdRoot();
 uint32_t halMillis();
 void halAdvanceForTest(uint32_t ms);   // soma um offset ao relogio; 0 = tempo real
 void halSetRtcOffsetForTest(int64_t seconds);
+int64_t halRtcOffsetSeconds();         // lido por hal/stubs.cpp
 
 // --- espera ociosa: o shell liga isso a SDL_WaitEventTimeout ---
 void halSetIdleWaiter(std::function<void(uint32_t)> waiter);

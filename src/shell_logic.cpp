@@ -1,5 +1,6 @@
 #include "shell_logic.h"
 #include "game_host.h"
+#include <string>
 
 void ShellStateMachine::hide() {
   if (state_ == ShellState::Hidden) return;
@@ -134,4 +135,11 @@ void shellResizeKeepCenter(int x, int y, int oldSide, int newSide, int* nx, int*
   int cx = x + oldSide / 2, cy = y + oldSide / 2;
   *nx = cx - newSide / 2;
   *ny = cy - newSide / 2;
+}
+
+std::string shellTooltipText(const char* name, int level) {
+  if (!name || !*name) return "TamaPoke";
+  std::string s = std::string("TamaPoke \xE2\x80\x94 ") + name;
+  if (level >= 1) s += ", n\xC3\xADvel " + std::to_string(level);
+  return s;
 }

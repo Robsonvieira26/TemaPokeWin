@@ -15,6 +15,9 @@ struct IGameHost {
   virtual void touchUp() = 0;
   virtual void powerShortPress() = 0;
   virtual void injectConsole(const char* line) = 0;
+  // Apelido ou nome da especie no idioma ativo (UTF-8); "" e nivel 0 se ainda e ovo.
+  virtual const char* petName() const = 0;
+  virtual int petLevel() const = 0;
   virtual void save() = 0;
   virtual void setSoundEnabled(bool on) = 0;
   virtual bool wantsRestart() const = 0;

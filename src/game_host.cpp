@@ -2,6 +2,7 @@
 #include "hal_control.h"
 #include "pet.h"     // do upstream: classe Pet
 #include "audio.h"   // do upstream: audioSetEnabled
+#include "dex.h"     // do upstream: dexName (idioma ativo)
 #include <string>
 #include <utility>
 
@@ -44,6 +45,14 @@ class GameHost : public IGameHost {
     halSerialInject(s.c_str());
   }
 
+  // Mesma regra do firmware (TamaPoke.ino): nick[0] ? nick : dexName(speciesId).
+  const char* petName() const override {
+    if (!booted_ || pet.isEgg()) { name_.clear(); return name_.c_str(); }
+    name_ = pet.nick[0] ? pet.nick : dexName(pet.speciesId);
+    return name_.c_str();
+  }
+  int petLevel() const override { return (booted_ && !pet.isEgg()) ? (int)pet.level() : 0; }
+
   // O upstream grava na hora nos eventos importantes (p.ex. chooseStarter chama
   // save()); o que sobra e o guardado periodico pendente, que o loop so volca
   // num momento sem animacao. flushSave() volca esse pendente (no-op sem pendencia).
@@ -54,6 +63,7 @@ class GameHost : public IGameHost {
  private:
   std::string dataDir_, sdRoot_;
   bool booted_ = false;
+  mutable std::string name_;
 };
 }  // namespace
 

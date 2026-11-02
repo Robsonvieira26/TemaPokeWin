@@ -1,9 +1,14 @@
 #pragma once
 // Logica pura do shell desktop-pet: sem SDL, sem windows.h. Testavel sem janela.
 #include <cstdint>
+#include <string>
 #include <vector>
 
 struct IGameHost;
+
+// "TamaPoke — <nome>, nível <N>" (UTF-8); sem nome (ou nulo): "TamaPoke"; nivel < 1 omite o nivel.
+// Nao corta: a bandeja limita o tamanho depois.
+std::string shellTooltipText(const char* name, int level);
 
 enum class ShellState { Visible, Hidden };
 

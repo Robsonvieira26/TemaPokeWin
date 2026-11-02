@@ -31,6 +31,8 @@ struct FakeHost : IGameHost {
   void touchUp() override { log.push_back({Ev::Up}); }
   void powerShortPress() override { log.push_back({Ev::Pwr}); }
   void injectConsole(const char*) override {}
+  const char* petName() const override { return ""; }
+  int petLevel() const override { return 0; }
   void save() override { log.push_back({Ev::Save}); }
   void setSoundEnabled(bool) override {}
   bool wantsRestart() const override { return false; }
@@ -349,6 +351,35 @@ TEST(shell_swipe, firmware_real_abre_a_dex) {
   uint64_t r1 = hashFrame(h);
   assentar(h, 500);
   CHECK_MSG(hashFrame(h) != r1, "de volta a tela principal animada");
+  destroyGameHost(h);
+  fs::remove_all(dir, ec);
+}
+
+TEST(shell_host, nome_e_nivel_do_bicho) {
+  auto dir = fs::temp_directory_path() / "tamapoke_shell_petname";
+  std::error_code ec;
+  fs::remove_all(dir, ec);
+  fs::create_directories(dir, ec);
+  SDL_SetHint(SDL_HINT_AUDIO_DRIVER, "dummy");
+  halTouchUp();
+  halSetRtcOffsetForTest(0);
+  IGameHost* h = createGameHost(dir.string().c_str(), "upstream/tools/sdcard");
+  CHECK_STREQ(h->petName(), "");  // antes do boot
+  CHECK_EQ(h->petLevel(), 0);
+  h->boot();
+  assentar(h, 600);
+  CHECK_STREQ(h->petName(), "");  // sem inicial escolhido: ovo
+  CHECK_EQ(h->petLevel(), 0);
+  h->touchDown(233, 145); assentar(h, 150); h->touchUp(); assentar(h, 150);
+  assentar(h, 1500);
+  h->injectConsole("HATCH");
+  assentar(h, 1500);
+  std::string n = h->petName();
+  CHECK(!n.empty());
+  CHECK(h->petLevel() >= 1);
+  h->injectConsole("NICK Bolt");
+  assentar(h, 300);
+  CHECK_STREQ(h->petName(), "Bolt");
   destroyGameHost(h);
   fs::remove_all(dir, ec);
 }

@@ -74,12 +74,12 @@ file(GLOB TEST_SRC CONFIGURE_DEPENDS tests/*.cpp)
 # Fontes do shell/jogo compartilhadas entre o app e os testes (sem main.cpp/app_shell.cpp).
 set(CORE_SRC
   src/present.cpp src/game_host.cpp src/settings.cpp src/shell_logic.cpp
-  src/win/tray.cpp src/win/autostart.cpp src/win/single_instance.cpp src/win/window_mode.cpp
+  src/win/tray.cpp src/win/tray_menu.cpp src/win/autostart.cpp src/win/single_instance.cpp src/win/window_mode.cpp
   ${HAL_SRC} ${UPSTREAM_GAME_SRC} ${INO_GEN})
 add_executable(tamapoke_tests ${TEST_SRC} ${CORE_SRC})
 target_include_directories(tamapoke_tests PRIVATE hal upstream src third_party/Arduino_GFX/src)
 add_dependencies(tamapoke_tests ino_gen)
-target_link_libraries(tamapoke_tests PRIVATE SDL3::SDL3 nlohmann_json::nlohmann_json gfx_core)
+target_link_libraries(tamapoke_tests PRIVATE SDL3::SDL3 nlohmann_json::nlohmann_json gfx_core Shell32)
 # char sem sinal como no Xtensa do ESP32: o Arduino_GFX compara bytes UTF-8 (c >= 0xE0)
 # em getTextBounds(); com char com sinal (padrao do MSVC) o texto CJK mede errado.
 if (MSVC)

@@ -18,3 +18,8 @@ void trayShutdown();
 void trayShowMenuAtCursor();
 void traySetTooltip(const char* text);   // UTF-8
 void traySyncChecks(const Settings& settings);
+
+// SO PARA TESTES: HWND (como void*) da janela oculta da bandeja e o uID do icone;
+// nullptr / 0 se a bandeja nao esta inicializada.
+void* trayWindowForTest();
+unsigned trayIconIdForTest();

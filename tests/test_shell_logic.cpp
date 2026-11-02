@@ -288,22 +288,7 @@ TEST(shell_place, centralizar_e_redimensionar) {
   CHECK_EQ(ny, 200);
 }
 
-TEST(shell_tray, stub_inerte) {
-  struct A : TrayActions {
-    void toggleVisible() override {}
-    void setSound(bool) override {}
-    void setAlwaysOnTop(bool) override {}
-    void setScale(float) override {}
-    void setAutostart(bool) override {}
-    void quit() override {}
-  } a;
-  Settings s;
-  CHECK(trayInit(&a, s));
-  trayShowMenuAtCursor();
-  traySetTooltip("x");
-  traySyncChecks(s);
-  trayShutdown();
-}
+// (o antigo teste do stub da bandeja foi substituido por tests/test_tray.cpp)
 
 // ---- contra o firmware real ----
 namespace {

@@ -1,4 +1,4 @@
-[gd_scene load_steps=3 format=3 uid="uid://pokemon_scene"]
+[gd_scene load_steps=2 format=3 uid="uid://pokemon_scene"]
 
 [ext_resource type="Script" path="res://scripts/pokemon_controller.gd" id="1"]
 
@@ -13,9 +13,5 @@ script = ExtResource("1")
 shape = SubResource("CapsuleShape2D_1")
 position = Vector2(0, 0)
 
-[node name="Visual" type="ColorRect" parent="."]
-offset_left = -10.0
-offset_top = -32.0
-offset_right = 10.0
-offset_bottom = 0.0
-color = Color(1, 0.85, 0, 1)
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, -16)

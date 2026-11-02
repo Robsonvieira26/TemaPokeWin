@@ -41,6 +41,7 @@ uint64_t halAudioBytesWritten();
 
 // --- energia ---
 void halPwrShortPress();               // F2 / bandeja: o upstream le via pwrShortPressed()
+bool halConsumePwrShortPress();        // true uma vez por halPwrShortPress()
 
 // --- reinicio pedido pelo upstream (ESP.restart()) ---
 bool halRestartRequested();

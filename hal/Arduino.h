@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstdio>
+#include <ctime>
 #include "WString.h"
 #include "HardwareSerial.h"
 
@@ -11,6 +12,9 @@
 #define INPUT_PULLUP 2
 #define OUTPUT 1
 #define FALLING 2
+
+// MSVC nao tem gmtime_r (POSIX)
+inline std::tm* gmtime_r(const std::time_t* t, std::tm* out) { return gmtime_s(out, t) == 0 ? out : nullptr; }
 
 uint32_t millis();
 void delay(uint32_t ms);

@@ -18,6 +18,7 @@
 #define IRAM_ATTR
 #define HIGH 1
 #define LOW 0
+#define PI 3.1415926535897932384626433832795
 #define INPUT_PULLUP 2
 #define OUTPUT 1
 #define FALLING 2

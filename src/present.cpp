@@ -8,6 +8,14 @@ bool presentInsideCircle(int x, int y) {
   return dx * dx + dy * dy <= r * r;
 }
 
+uint8_t presentDisplayBrightness(uint8_t firmwareBrightness) {
+  if (firmwareBrightness == 0) return 0;
+  unsigned v = static_cast<unsigned>(firmwareBrightness) * 255u / kFirmwareNormalBrightness;
+  if (v > 255u) v = 255u;
+  if (v < kDisplayMinBrightness) v = kDisplayMinBrightness;
+  return static_cast<uint8_t>(v);
+}
+
 int presentToLogical(int windowPixel, float scale) {
   if (scale <= 0.0f) scale = 1.0f;
   int v = (int)((float)windowPixel / scale);

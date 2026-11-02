@@ -48,3 +48,9 @@ TEST(present, converte_quadro_com_e_sem_mascara) {
   ASSERT_EQ(out[0], 0xFFFF0000u);
   ASSERT_EQ(out[n - 1], 0xFFFF0000u);
 }
+
+TEST(present, brilho_do_painel_vira_brilho_de_desktop) {
+  struct { int in, out; } c[] = {{0,0},{1,100},{8,100},{25,100},{60,100},{100,141},
+                                 {145,205},{180,255},{200,255},{255,255}};
+  for (auto& e : c) CHECK_EQ((int)presentDisplayBrightness((uint8_t)e.in), e.out);
+}

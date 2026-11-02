@@ -138,7 +138,7 @@ void AppShell::run() {
 
 void AppShell::present() {
   if (!policy_.shouldPresent(sm_->state()) || !host_->frameDirty()) return;
-  presenter_.draw(host_->frame(), host_->brightness(), false);  // a regiao recorta o circulo
+  presenter_.draw(host_->frame(), presentDisplayBrightness(host_->brightness()), false);  // a regiao recorta o circulo
   host_->clearFrameDirty();
 }
 

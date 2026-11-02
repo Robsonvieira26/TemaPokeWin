@@ -77,7 +77,7 @@ bool AppShell::init(IGameHost* host, const Settings& settings, SingleInstance* s
   sm_ = std::make_unique<ShellStateMachine>(host_);
   host_->setSoundEnabled(settings_.soundEnabled);
   if (settings_.startHidden) sm_->hide();
-  trayUp_ = trayInit(this, settings_);
+  trayUp_ = trayInit(this, &settings_);
   return true;
 }
 

@@ -237,11 +237,10 @@ TEST(tray_win32, icon_lifecycle_and_routing) {
   trayShutdown();
   trayShowMenuAtCursor();
   traySetTooltip("antes do init");
-  traySyncChecks(Settings{});
 
   FakeActions fake;
   Settings s;
-  if (!trayInit(&fake, s)) {
+  if (!trayInit(&fake, &s)) {
     std::printf("  SKIP: sem shell/bandeja\n");
     return;
   }
@@ -264,9 +263,8 @@ TEST(tray_win32, icon_lifecycle_and_routing) {
     CHECK_EQ(fake.calls[2], "quit");
   }
 
-  // traySyncChecks atualiza a copia usada pelo dispatch
-  Settings s2 = s; s2.soundEnabled = false;
-  traySyncChecks(s2);
+  // A bandeja le a Settings viva por ponteiro: mudar o objeto vale sem nenhum sync.
+  s.soundEnabled = false;
   fake.calls.clear();
   SendMessageW(hwnd, WM_COMMAND, kTrayToggleSound, 0);
   CHECK_EQ(fake.calls.size(), (size_t)1);
@@ -298,14 +296,39 @@ TEST(tray_win32, icon_lifecycle_and_routing) {
   trayShutdown();
   trayShowMenuAtCursor();
   traySetTooltip("depois");
-  traySyncChecks(s);
   CHECK(trayWindowForTest() == nullptr);
 
   // reinit funciona e novamente limpa
-  if (trayInit(&fake, s)) {
+  if (trayInit(&fake, &s)) {
     HWND h2 = (HWND)trayWindowForTest();
     CHECK(iconExists(h2, trayIconIdForTest()));
     trayShutdown();
     CHECK(!iconExists(h2, uid));
   }
+}
+
+// Regressao: a bandeja nao pode guardar copia das settings (ficava desatualizada e o
+// usuario nunca conseguia religar o som pelo menu).
+TEST(tray_win32, settings_vivas_sem_sync) {
+  FakeActions fake;
+  Settings live;
+  if (!trayInit(&fake, &live)) {
+    std::printf("  SKIP: sem shell/bandeja\n");
+    return;
+  }
+  HWND hwnd = (HWND)trayWindowForTest();
+  CHECK(hwnd != nullptr);
+  if (hwnd) {
+    live.soundEnabled = false;
+    live.scale = 2.0f;
+    SendMessageW(hwnd, WM_COMMAND, kTrayToggleSound, 0);
+    CHECK_EQ(fake.calls.size(), (size_t)1);
+    if (!fake.calls.empty()) CHECK_EQ(fake.calls[0], "setSound:1");
+
+    bool soundChecked = true;
+    for (const TrayMenuItem& it : trayBuildMenu(live))
+      if (it.id == kTrayToggleSound) soundChecked = it.checked;
+    CHECK(!soundChecked);
+  }
+  trayShutdown();
 }

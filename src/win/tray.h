@@ -13,11 +13,13 @@ struct TrayActions {
   virtual void quit() = 0;
 };
 
-bool trayInit(TrayActions* actions, const Settings& settings);
+// `settings` e lido por PONTEIRO a cada montagem de menu e a cada comando: a bandeja nao guarda
+// copia, entao nunca fica desatualizada. O objeto apontado DEVE sobreviver a bandeja (ate
+// trayShutdown); AppShell::settings_ cumpre isso.
+bool trayInit(TrayActions* actions, const Settings* settings);
 void trayShutdown();
 void trayShowMenuAtCursor();
 void traySetTooltip(const char* text);   // UTF-8
-void traySyncChecks(const Settings& settings);
 
 // SO PARA TESTES: HWND (como void*) da janela oculta da bandeja e o uID do icone;
 // nullptr / 0 se a bandeja nao esta inicializada.

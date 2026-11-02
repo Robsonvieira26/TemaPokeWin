@@ -23,7 +23,7 @@ const UINT kIconId = 1;
 HWND g_hwnd = nullptr;
 ATOM g_class = 0;
 TrayActions* g_actions = nullptr;
-Settings g_settings;
+const Settings* g_settings = nullptr;
 UINT g_taskbarCreated = 0;
 std::wstring g_tip = L"TamaPoke";
 bool g_added = false;
@@ -118,7 +118,9 @@ HMENU buildMenu(const std::vector<TrayMenuItem>& model) {
   return root;
 }
 
-void dispatch(int id) { trayDispatchCommand(id, g_settings, g_actions); }
+void dispatch(int id) {
+  if (g_settings) trayDispatchCommand(id, *g_settings, g_actions);
+}
 
 LRESULT CALLBACK wndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
   if (msg == kCallbackMsg) {
@@ -147,8 +149,9 @@ LRESULT CALLBACK wndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 
 }  // namespace
 
-bool trayInit(TrayActions* actions, const Settings& settings) {
+bool trayInit(TrayActions* actions, const Settings* settings) {
   if (g_hwnd) return true;
+  if (!settings) return false;
   g_actions = actions;
   g_settings = settings;
   g_taskbarCreated = RegisterWindowMessageW(L"TaskbarCreated");
@@ -159,7 +162,7 @@ bool trayInit(TrayActions* actions, const Settings& settings) {
   wc.hInstance = GetModuleHandleW(nullptr);
   wc.lpszClassName = kClassName;
   g_class = RegisterClassExW(&wc);
-  if (!g_class) { g_actions = nullptr; return false; }
+  if (!g_class) { g_actions = nullptr; g_settings = nullptr; return false; }
 
   g_hwnd = CreateWindowExW(WS_EX_TOOLWINDOW, kClassName, L"TamaPokeTray", WS_POPUP,
                            0, 0, 0, 0, nullptr, nullptr, wc.hInstance, nullptr);
@@ -169,6 +172,7 @@ bool trayInit(TrayActions* actions, const Settings& settings) {
     UnregisterClassW(kClassName, wc.hInstance);
     g_class = 0;
     g_actions = nullptr;
+    g_settings = nullptr;
     return false;
   }
   return true;
@@ -182,12 +186,13 @@ void trayShutdown() {
   if (g_class) UnregisterClassW(kClassName, GetModuleHandleW(nullptr));
   g_class = 0;
   g_actions = nullptr;
+  g_settings = nullptr;
   g_menuOpen = false;
 }
 
 void trayShowMenuAtCursor() {
-  if (!g_hwnd || g_menuOpen) return;
-  HMENU menu = buildMenu(trayBuildMenu(g_settings));
+  if (!g_hwnd || g_menuOpen || !g_settings) return;
+  HMENU menu = buildMenu(trayBuildMenu(*g_settings));
   if (!menu) return;
   POINT pt;
   GetCursorPos(&pt);
@@ -210,8 +215,6 @@ void traySetTooltip(const char* text) {
   fillTip(d);
   Shell_NotifyIconW(NIM_MODIFY, &d);
 }
-
-void traySyncChecks(const Settings& settings) { g_settings = settings; }
 
 void* trayWindowForTest() { return g_hwnd; }
 unsigned trayIconIdForTest() { return g_hwnd ? kIconId : 0; }

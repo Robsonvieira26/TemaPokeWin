@@ -49,5 +49,5 @@ func load_data() -> void:
 		return
 	xp     = cfg.get_value("stats", "xp",     0.0)
 	level  = cfg.get_value("stats", "level",  1)
-	hunger = cfg.get_value("stats", "hunger", 100.0)
-	energy = cfg.get_value("stats", "energy", 100.0)
+	hunger = maxf(10.0, cfg.get_value("stats", "hunger", 100.0))
+	energy = maxf(10.0, cfg.get_value("stats", "energy", 100.0))

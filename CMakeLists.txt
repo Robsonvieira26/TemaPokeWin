@@ -25,3 +25,18 @@ target_link_libraries(tamapoke PRIVATE SDL3::SDL3)
 
 add_custom_command(TARGET tamapoke POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:SDL3::SDL3> $<TARGET_FILE_DIR:tamapoke>)
+
+# Suite de testes do upstream (logica pura, sem SDL). Fontes espelham upstream/test/Makefile.
+add_executable(upstream_tests
+  upstream/test/main.cpp
+  upstream/test/shim/shim.cpp
+  upstream/test/test_pet.cpp
+  upstream/test/test_dex.cpp
+  upstream/test/test_i18n.cpp
+  upstream/test/test_blit.cpp
+  upstream/test/test_batcurve.cpp
+  upstream/test/test_power.cpp
+  upstream/pet.cpp
+  upstream/i18n.cpp)
+target_include_directories(upstream_tests PRIVATE upstream/test/shim upstream)
+add_test(NAME upstream COMMAND upstream_tests)

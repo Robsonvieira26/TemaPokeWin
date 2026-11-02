@@ -8,6 +8,7 @@
 #include "HardwareSerial.h"
 #include "pgmspace.h"
 #include "Print.h"
+#include "freertos_shim.h"   // no ESP32 o core do Arduino ja traz o FreeRTOS
 
 // MSVC nao entende atributos GNU (Arduino_GFX usa __attribute__((always_inline)))
 #ifdef _MSC_VER

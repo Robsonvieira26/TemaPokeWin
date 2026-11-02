@@ -56,7 +56,7 @@ add_test(NAME upstream COMMAND upstream_tests)
 # Testes contra a nossa HAL (nunca ve o shim do upstream; upstream/test fora do include path).
 file(GLOB HAL_SRC CONFIGURE_DEPENDS hal/*.cpp)
 file(GLOB TEST_SRC CONFIGURE_DEPENDS tests/*.cpp)
-add_executable(tamapoke_tests ${TEST_SRC} ${HAL_SRC} src/present.cpp upstream/sdmon.cpp upstream/rtcbat.cpp)
+add_executable(tamapoke_tests ${TEST_SRC} ${HAL_SRC} src/present.cpp upstream/sdmon.cpp upstream/rtcbat.cpp upstream/audio.cpp)
 target_include_directories(tamapoke_tests PRIVATE hal upstream src third_party/Arduino_GFX/src)
 target_link_libraries(tamapoke_tests PRIVATE SDL3::SDL3 nlohmann_json::nlohmann_json gfx_core)
 add_test(NAME tamapoke COMMAND tamapoke_tests)

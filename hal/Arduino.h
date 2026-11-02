@@ -3,7 +3,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include "WString.h"
-// HardwareSerial.h entra na Task 6
+#include "HardwareSerial.h"
 
 #define IRAM_ATTR
 #define HIGH 1

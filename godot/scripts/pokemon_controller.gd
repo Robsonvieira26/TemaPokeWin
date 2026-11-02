@@ -20,7 +20,7 @@ var state_timer:  float  = 0.0
 var active_zone:  Node   = null
 var _species_id:  String = "0004"
 
-@onready var camera: Camera2D       = $"../Camera"
+@onready var camera: Camera2D         = $"../Camera"
 @onready var sprite: AnimatedSprite2D = $Visual
 
 func _ready() -> void:
@@ -38,8 +38,6 @@ func _physics_process(delta: float) -> void:
 
 	if camera:
 		camera.position.x = position.x
-
-# ── Lógica de estados ────────────────────────────────────────────────
 
 func _do_wander(delta: float) -> void:
 	position.x += direction * WALK_SPEED * delta
@@ -82,8 +80,6 @@ func _set_state(new_state: State) -> void:
 			state_timer = randf_range(4.0, 10.0)
 			# animação de atividade definida em enter_activity()
 
-# ── API pública ──────────────────────────────────────────────────────
-
 func enter_activity(zone: Node) -> void:
 	active_zone = zone
 	_set_state(State.ACTIVITY)
@@ -124,7 +120,6 @@ func _play_anim(anim_name: String) -> void:
 
 func _update_sprite_flip() -> void:
 	if sprite:
-		# East direction está na sheet → flip quando andando para esquerda
 		sprite.flip_h = (direction == -1)
 
 static func _species_for_level(lvl: int) -> String:

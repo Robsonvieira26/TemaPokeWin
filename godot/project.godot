@@ -10,7 +10,7 @@ config/name="TemaPokeWin"
 config/description="Desktop pet simulation — Pokémon autônomo num mundo 2D"
 config/version="0.1.0"
 run/main_scene="res://scenes/World.tscn"
-config/features=PackedStringArray("4.3", "GL Compatibility")
+config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://assets/tamapoke-256.png"
 
 [autoload]
@@ -25,6 +25,10 @@ window/size/viewport_height=480
 window/size/resizable=false
 window/per_pixel_transparency/allowed=true
 window/stretch/mode="canvas_items"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/phantom_camera/plugin.cfg")
 
 [rendering]
 

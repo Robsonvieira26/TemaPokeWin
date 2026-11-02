@@ -3819,6 +3819,8 @@ git commit -m "feat(win): autostart no registro e instancia unica"
 
 ### Task 19: Modo de janela — transparência com fallback e hit-test
 
+> **REDESENHADA (spec revisto, commit abaixo).** A região elíptica (`SetWindowRgn`) é o **caminho único**; não há caminho "Alpha" nem `SDL_WINDOW_TRANSPARENT` (alfa por pixel continua capturando cliques nos pixels transparentes). Ignore `WindowModePath`/`windowModePathName` e o teste `descricao_do_caminho_escolhido`. API: `bool windowModeHit(int x, int y, float scale)` (pura, testada), `void windowModeApplyRoundHwnd(void* hwnd)` (Win32: lê `GetWindowRect` e aplica `CreateEllipticRgn(0,0,w,h)` + `SetWindowRgn(hwnd, rgn, TRUE)`; testável com uma janela Win32 comum `WS_POPUP`, verificando com `GetWindowRgn`/`PtInRegion`), `void windowModeApplyRound(SDL_Window*)` (obtém o HWND de `SDL_PROP_WINDOW_WIN32_HWND_POINTER` e delega), `windowModeSetAlwaysOnTop`, `windowModeMove`. Use o tamanho **real** da janela (`GetWindowRect`), nunca `466*scale` calculado: com DPI diferente de 100% os dois podem divergir. Reaplique a região a cada mudança de tamanho.
+
 **Files:**
 - Create: `src/win/window_mode.h`, `src/win/window_mode.cpp`
 - Test: `tests/test_window_mode.cpp`

@@ -85,7 +85,7 @@ struct IGameHost {
 | `src/present.{h,cpp}` | textura RGB565, escala, brilho, máscara circular, alfa |
 | `src/win/tray.cpp` | bandeja e menu de contexto |
 | `src/win/autostart.cpp` | chave `Run` do registro |
-| `src/win/window_mode.cpp` | transparência vs. `SetWindowRgn`, hit-test, arrastar |
+| `src/win/window_mode.cpp` | região elíptica (`SetWindowRgn`), hit-test, arrastar |
 | `hal/` | 13 headers de hardware + `hal_control.h` |
 | `tests/` | HAL e host headless |
 
@@ -123,15 +123,18 @@ Máquina de três estados no `app_shell`. O `game_host` só obedece.
 
 ## 5. Janela, input e apresentação
 
-**Flags:** `SDL_WINDOW_BORDERLESS | SDL_WINDOW_TRANSPARENT | SDL_WINDOW_ALWAYS_ON_TOP |
-SDL_WINDOW_UTILITY`. `UTILITY` mantém o app fora do Alt-Tab e da barra de tarefas.
+**Flags:** `SDL_WINDOW_BORDERLESS | SDL_WINDOW_ALWAYS_ON_TOP | SDL_WINDOW_UTILITY`
+(sem `SDL_WINDOW_TRANSPARENT`: veja "Silhueta redonda"). `UTILITY` mantém o app fora do Alt-Tab e da barra de tarefas.
 Escala 0,5× / 1× / 2×, default **1×** (466 px). Posição e escala em `settings.json`,
 restauradas no logon.
 
-**Silhueta redonda:** máscara circular de raio 233, alfa 0 fora. Se a criação com
-`SDL_WINDOW_TRANSPARENT` falhar, ou o smoke test de boot achar o fundo opaco,
-`window_mode.cpp` cai para `SetWindowRgn` com região elíptica (recorte duro, sem
-antialias). A escolha é feita uma vez no boot e registrada no log.
+**Silhueta redonda:** região elíptica (`SetWindowRgn`) do tamanho real da janela, aplicada na
+criação e a cada mudança de escala. É o caminho **único** (decisão revista na execução): a região
+recorta o que se vê e também o que recebe cliques, então o quadrado de 466 px fora do círculo
+não rouba cliques do desktop. Alfa por pixel (`SDL_WINDOW_TRANSPARENT`) foi descartado como caminho
+principal: uma janela com alfa por pixel continua capturando cliques nos pixels transparentes (o
+Windows decide o hit-test pela região, não pelo alfa) e ainda depende de driver/compositor. Custo: a
+borda do círculo fica sem antialias (1 px), irrelevante com preto fora dele.
 
 **Hit-test:** cliques fora do círculo passam para a janela de trás — não só visualmente.
 Sem isso, um quadrado invisível de 466 px rouba cliques do desktop.
@@ -225,7 +228,7 @@ fingir cobertura que não existe.
 | `nvs.json` corrompido ou de versão futura | Renomeia para `nvs.json.bad-<epoch>`, começa limpo, loga. Nunca trava no boot. |
 | SDL sem áudio | Segue muda. Não é fatal. |
 | SDL sem vídeo | Fatal: `MessageBoxW` com o motivo e sai. |
-| Transparência indisponível | Cai para `SetWindowRgn`. Loga qual caminho usou. |
+| `SetWindowRgn` falha | Loga o erro e segue com a janela retangular (nunca é fatal). |
 | Log | `%APPDATA%\TamaPoke\log.txt`, rotação em 1 MB. |
 
 ## 9. Verificação manual (checklist)
@@ -245,7 +248,7 @@ observando memória.
 |---|---|
 | Arduino_GFX não compila fora do ESP32 | Spike de no máximo 1 dia decide entre o núcleo real e um canvas próprio portando o Adafruit_GFX. Decisão registrada em `docs/decisions/0001-canvas.md`. |
 | Gerador de protótipos erra uma assinatura | Teste do script e o build pegam cedo. Fallback: header de protótipos escrito à mão e versionado — ainda zero patch no upstream. |
-| Transparência per-pixel irregular por driver | `SetWindowRgn`, decidido no boot. |
+| Transparência per-pixel irregular por driver / captura de cliques | Não usada: `SetWindowRgn` é o caminho único. |
 | `SDL_CreateTray` imaturo | `Shell_NotifyIconW` direto. `src/win/tray.cpp` já é isolado por isso. |
 | Upstream muda e pede símbolo novo na HAL | O CI compila contra o submódulo e quebra na hora. |
 | Timing | O upstream assume ~10 fps e física a 85 ms; `millis()` real do SDL preserva isso. |

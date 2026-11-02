@@ -56,9 +56,14 @@ add_test(NAME upstream COMMAND upstream_tests)
 # Testes contra a nossa HAL (nunca ve o shim do upstream; upstream/test fora do include path).
 file(GLOB HAL_SRC CONFIGURE_DEPENDS hal/*.cpp)
 file(GLOB TEST_SRC CONFIGURE_DEPENDS tests/*.cpp)
-add_executable(tamapoke_tests ${TEST_SRC} ${HAL_SRC} src/present.cpp upstream/sdmon.cpp upstream/rtcbat.cpp upstream/audio.cpp)
+add_executable(tamapoke_tests ${TEST_SRC} ${HAL_SRC} src/present.cpp upstream/i18n.cpp upstream/sdmon.cpp upstream/rtcbat.cpp upstream/audio.cpp)
 target_include_directories(tamapoke_tests PRIVATE hal upstream src third_party/Arduino_GFX/src)
 target_link_libraries(tamapoke_tests PRIVATE SDL3::SDL3 nlohmann_json::nlohmann_json gfx_core)
+# char sem sinal como no Xtensa do ESP32: o Arduino_GFX compara bytes UTF-8 (c >= 0xE0)
+# em getTextBounds(); com char com sinal (padrao do MSVC) o texto CJK mede errado.
+if (MSVC)
+  target_compile_options(tamapoke_tests PRIVATE /J)
+endif()
 add_test(NAME tamapoke COMMAND tamapoke_tests)
 set_tests_properties(tamapoke PROPERTIES WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 
@@ -75,7 +80,11 @@ add_library(gfx_core STATIC
   third_party/Arduino_GFX/src/Arduino_DataBus.cpp
   third_party/Arduino_GFX/src/canvas/Arduino_Canvas.cpp)
 target_include_directories(gfx_core PRIVATE hal third_party/Arduino_GFX/src)
+if (MSVC)
+  target_compile_options(gfx_core PRIVATE /J)  # ver comentario em tamapoke_tests
+endif()
 
 # Gerador .ino -> .cpp (prototipos como o builder do Arduino). Teste stdlib unittest.
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 add_test(NAME gen_protos COMMAND ${Python3_EXECUTABLE} -I ${CMAKE_SOURCE_DIR}/tests/test_gen_protos.py)
+add_test(NAME extract_u8g2_fonts COMMAND ${Python3_EXECUTABLE} -I ${CMAKE_SOURCE_DIR}/tests/test_extract_u8g2_fonts.py)

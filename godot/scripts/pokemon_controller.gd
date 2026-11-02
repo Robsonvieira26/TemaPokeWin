@@ -1,7 +1,8 @@
 extends CharacterBody2D
 
 # Controlador autônomo do pokémon — máquina de estados simples.
-# Não depende de sprites: usa um ColorRect como placeholder.
+# Sprites PMDCollab (CC BY-NC 4.0): Walk, Idle, Sleep, Eat, Charge → train
+# Opção futura: usar pokesprite + pipeline de conversão para mais assets animados.
 
 enum State { WANDER, IDLE, ACTIVITY }
 
@@ -15,11 +16,20 @@ var direction:   int    = 1     # 1 = direita, -1 = esquerda
 var state_timer: float  = 0.0
 var active_zone: Node   = null
 
-@onready var camera: Camera2D = $"../Camera"
+@onready var camera:         Camera2D        = $"../Camera"
+@onready var anim_sprite:    AnimatedSprite2D = $AnimatedSprite2D
 
 func _ready() -> void:
 	position = Vector2(480.0, GROUND_Y)
+	_setup_sprites()
 	_set_state(State.WANDER)
+
+func _setup_sprites() -> void:
+	if anim_sprite == null:
+		return
+	var loader := preload("res://scripts/sprite_loader.gd").new()
+	anim_sprite.sprite_frames = loader.build_sprite_frames()
+	loader.free()
 
 func _physics_process(delta: float) -> void:
 	state_timer -= delta
@@ -35,6 +45,10 @@ func _physics_process(delta: float) -> void:
 	# câmera suave seguindo o pokémon no eixo X
 	if camera:
 		camera.position.x = position.x
+
+	# espelha o sprite conforme direção
+	if anim_sprite:
+		anim_sprite.flip_h = direction < 0
 
 func _do_wander(delta: float) -> void:
 	position.x += direction * WALK_SPEED * delta
@@ -68,15 +82,28 @@ func _set_state(new_state: State) -> void:
 	match new_state:
 		State.WANDER:
 			state_timer = randf_range(4.0, 9.0)
+			_play_anim("walk")
 		State.IDLE:
 			state_timer = randf_range(1.5, 4.0)
+			_play_anim("idle")
 		State.ACTIVITY:
 			state_timer = randf_range(4.0, 10.0)
+			# animação depende da zona; atualizado em enter_activity
+
+func _play_anim(anim_name: String) -> void:
+	if anim_sprite and anim_sprite.sprite_frames and \
+			anim_sprite.sprite_frames.has_animation(anim_name):
+		anim_sprite.play(anim_name)
 
 # Chamado pelo activity_zone.gd
 func enter_activity(zone: Node) -> void:
 	active_zone = zone
 	_set_state(State.ACTIVITY)
+	match zone.activity_name:
+		"eat":   _play_anim("eat")
+		"sleep": _play_anim("sleep")
+		"train": _play_anim("train")
+		_:       _play_anim("idle")
 
 func exit_activity(_zone: Node) -> void:
 	if active_zone == _zone:

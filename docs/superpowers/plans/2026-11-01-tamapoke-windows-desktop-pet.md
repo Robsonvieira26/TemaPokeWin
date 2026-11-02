@@ -2967,6 +2967,8 @@ git commit -m "feat(hal): toque a partir do mouse, disparando a ISR do upstream"
 
 ### Task 14: Gerador de protótipos do `.ino`
 
+> **EXECUTADA COM REDESENHO (commit 710890b).** O desenho abaixo (header de protótipos via `/FI`) **não funciona**: `idleWait(PowerCtx c)` usa um tipo de `power.h`, e um protótipo force-incluído apareceria *antes* desse `#include`. O que foi implementado: `tools/gen_protos.py ENTRADA.ino -o SAIDA.cpp` gera uma **cópia .cpp completa** do sketch com `#include <Arduino.h>` (se faltar), os protótipos inseridos logo antes da primeira função (como o Arduino) e `#line` apontando para o `.ino` original. O CMake compila essa cópia gerada (`build/gen/TamaPoke.gen.cpp`), **sem `/TP` e sem `/FI`**. Testes em `unittest` (sem pytest), registrados no ctest como `gen_protos`. Verificado contra o sketch real: 90 protótipos e o `.ino` inteiro passa em `cl /Zs`, restando só a constante `PI`. O texto original da tarefa fica abaixo apenas como registro.
+
 O Arduino gera protótipos de função automaticamente; o C++ não. Isto resolve sem patch no upstream.
 
 **Files:**
@@ -3327,6 +3329,8 @@ void destroyGameHost(IGameHost* h) { delete h; }
 Se `pet.flushSave()` não existir com esse nome, use o que o Step 4 revelou. Se o upstream não expõe gravação explícita (salva sozinho dentro do `loop()`), troque o corpo de `save()` por um comentário dizendo isso e remova o `ASSERT_TRUE(exists(nvs.json))` do teste — o save passa a acontecer no `tick()`.
 
 - [ ] **Step 6: Compilar o `.ino` com os protótipos gerados**
+
+> **Atualizado:** use o desenho da Task 14 redesenhada. No CMake, um `add_custom_command` roda `python -I tools/gen_protos.py upstream/TamaPoke.ino -o ${CMAKE_BINARY_DIR}/gen/TamaPoke.gen.cpp` (DEPENDS no `.ino` e no script) e o alvo compila **esse .cpp gerado** como C++ normal. Ignore o `set_source_files_properties(... /TP;/FI...)` do bloco abaixo. **Pré-requisitos:** as Tasks 23 (áudio/FreeRTOS) e 24 (fontes CJK) devem estar feitas antes desta, porque `audio.cpp` e o `.ino` dependem delas. Falta ainda no `Arduino.h` da HAL a constante `PI` (usada em `TamaPoke.ino` linhas 2320 e 2332).
 
 No `CMakeLists.txt`:
 
@@ -5580,6 +5584,8 @@ Expected: CI verde e o instalador publicado como artefato da tag.
 ---
 
 ## Notas de execução
+
+**Ordem real de execução (diverge da numeração).** Dependências descobertas na execução: a Task 15 compila o jogo inteiro, que precisa de `audio.cpp` (FreeRTOS + I2S, Task 23) e das fontes CJK (Task 24). A ordem executada é: 1–14, **23, 24**, 15, 16, depois 17–22b, 25–27. A Task 11B nunca é executada (Task 10 decidiu pelo Caminho A). Os Steps 7 e 9 da Task 23 que tocam `src/game_host.*` e a bandeja migram para as Tasks 15 e 21, quando esses arquivos existirem.
 
 **O que fazer quando o upstream não bate com o plano.** Este plano foi escrito sem o submódulo clonado, então toda assinatura de função do upstream é uma hipótese declarada: cada tarefa que depende de uma começa com um passo de `grep` que revela a assinatura real. A regra é sempre a mesma: **a HAL se ajusta ao upstream, nunca o contrário.** Se um `grep` revelar algo que invalida o desenho de uma tarefa (por exemplo, o upstream não ter um `pet.flushSave()`), ajuste a tarefa e diga isso no commit — não force o plano.
 

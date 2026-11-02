@@ -19,6 +19,9 @@ class GameHost : public IGameHost {
   void boot() override {
     halSetDataDir(dataDir_.c_str());
     halSetSdRoot(sdRoot_.c_str());
+    // `pet` e um global do .ino que sobrevive ao host: sem isto, um 2o boot em outro
+    // diretorio herdaria dexReg/lastSeenEpoch do bicho anterior (newEgg() nao os zera).
+    pet = Pet();
     setup();
     booted_ = true;
   }

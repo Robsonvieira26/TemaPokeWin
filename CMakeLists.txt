@@ -20,6 +20,18 @@ set(SDL_STATIC OFF CACHE BOOL "" FORCE)
 set(SDL_TEST_LIBRARY OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(SDL3)
 
+# nlohmann/json v3.11.3 declara cmake_minimum_required < 3.5, rejeitado pelo CMake 4.x.
+# Politica escopada so a esta dependencia (nao vaza para o SDL3 acima).
+FetchContent_Declare(nlohmann_json
+  GIT_REPOSITORY https://github.com/nlohmann/json.git
+  GIT_TAG v3.11.3
+  GIT_SHALLOW TRUE)
+set(JSON_BuildTests OFF CACHE INTERNAL "")
+set(JSON_Install OFF CACHE INTERNAL "")
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
+FetchContent_MakeAvailable(nlohmann_json)
+unset(CMAKE_POLICY_VERSION_MINIMUM)
+
 add_executable(tamapoke WIN32 src/main.cpp)
 target_link_libraries(tamapoke PRIVATE SDL3::SDL3)
 
@@ -46,7 +58,7 @@ file(GLOB HAL_SRC CONFIGURE_DEPENDS hal/*.cpp)
 file(GLOB TEST_SRC CONFIGURE_DEPENDS tests/*.cpp)
 add_executable(tamapoke_tests ${TEST_SRC} ${HAL_SRC})
 target_include_directories(tamapoke_tests PRIVATE hal upstream src)
-target_link_libraries(tamapoke_tests PRIVATE SDL3::SDL3)
+target_link_libraries(tamapoke_tests PRIVATE SDL3::SDL3 nlohmann_json::nlohmann_json)
 add_test(NAME tamapoke COMMAND tamapoke_tests)
 
 # SDL3 e DLL compartilhada: sem isto o exe de teste nao abre ("Erro do sistema").

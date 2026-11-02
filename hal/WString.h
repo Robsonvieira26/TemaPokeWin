@@ -4,7 +4,8 @@
 
 // String do Arduino sobre std::string. So os metodos que o upstream usa
 // (grep da Task 5): trim, length, startsWith, substring(1/2 args), toInt,
-// c_str, indexOf(const char*), lastIndexOf(char).
+// c_str, indexOf(const char*), lastIndexOf(char), ==(const char*), const char* + String
+// (as duas ultimas vieram de sdmon.cpp, Task 8).
 class String {
  public:
   String() = default;
@@ -36,6 +37,12 @@ class String {
     size_t p = s_.rfind(c); return p == std::string::npos ? -1 : (int)p;
   }
   long toInt() const { return std::strtol(s_.c_str(), nullptr, 10); }
+
+  bool operator==(const char* o) const { return s_ == (o ? o : ""); }
+  bool operator!=(const char* o) const { return !(*this == o); }
+  friend String operator+(const char* a, const String& b) {
+    return String(std::string(a ? a : "") + b.s_);
+  }
 
  private:
   std::string s_;

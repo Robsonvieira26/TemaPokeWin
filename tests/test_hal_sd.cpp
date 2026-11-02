@@ -122,3 +122,19 @@ TEST(hal_sd, caminhos_nao_escapam_da_raiz) {
   std::error_code ec;
   std::filesystem::remove(root.parent_path() / "tamapoke_fora.bin", ec);
 }
+
+// --- integracao: upstream/sdmon.cpp real carregando um sprite PMD real ---
+#include "sdmon.h"
+
+TEST(hal_sd, carrega_um_pmd_real_do_upstream) {
+  halSetSdRoot("upstream/tools/sdcard");  // relativo a raiz do repo (WORKING_DIRECTORY)
+  ASSERT_TRUE(sdBegin());
+  ASSERT_TRUE(sdReady);
+  PmdMon pmd;
+  ASSERT_TRUE(pmd.load(25, false));
+  ASSERT_TRUE(pmd.loaded);
+  ASSERT_TRUE(pmd.has(PMD_IDLE));
+  ASSERT_TRUE(pmd.acts[PMD_IDLE].w > 0 && pmd.acts[PMD_IDLE].frames > 0);
+  pmd.unload();
+  sdReady = false;
+}

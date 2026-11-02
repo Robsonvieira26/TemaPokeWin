@@ -14,6 +14,7 @@ class HardwareSerial {
   int available();
   int read();  // -1 se vazio (usado tambem para esvaziar a fila nos testes)
   size_t readBytes(char* buf, size_t len);
+  size_t readBytes(uint8_t* buf, size_t len) { return readBytes((char*)buf, len); }  // sdmon.cpp
   String readStringUntil(char terminator);
 
   void println(const char* s = "");

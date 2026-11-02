@@ -56,10 +56,11 @@ add_test(NAME upstream COMMAND upstream_tests)
 # Testes contra a nossa HAL (nunca ve o shim do upstream; upstream/test fora do include path).
 file(GLOB HAL_SRC CONFIGURE_DEPENDS hal/*.cpp)
 file(GLOB TEST_SRC CONFIGURE_DEPENDS tests/*.cpp)
-add_executable(tamapoke_tests ${TEST_SRC} ${HAL_SRC})
+add_executable(tamapoke_tests ${TEST_SRC} ${HAL_SRC} upstream/sdmon.cpp)
 target_include_directories(tamapoke_tests PRIVATE hal upstream src)
 target_link_libraries(tamapoke_tests PRIVATE SDL3::SDL3 nlohmann_json::nlohmann_json)
 add_test(NAME tamapoke COMMAND tamapoke_tests)
+set_tests_properties(tamapoke PROPERTIES WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 
 # SDL3 e DLL compartilhada: sem isto o exe de teste nao abre ("Erro do sistema").
 add_custom_command(TARGET tamapoke_tests POST_BUILD

@@ -762,7 +762,9 @@ TEST(hal_serial, linha_injetada_chega_por_readStringUntil) {
   ASSERT_TRUE(Serial.available() > 0);
   String line = Serial.readStringUntil('\n');
   line.trim();
-  ASSERT_TRUE(line == String("STATS"));
+  // O String da HAL so tem o que o upstream usa: nao ha operator==. Compare
+  // pelo c_str() de um String LOCAL (de um temporario, o ponteiro ficaria pendurado).
+  CHECK_STREQ(line.c_str(), "STATS");
   ASSERT_EQ(Serial.available(), 0);
 }
 
@@ -911,6 +913,16 @@ int HardwareSerial::printf(const char* fmt, ...) {
 ```
 
 Adicione `#include <cstring>` se o compilador reclamar de `strlen`.
+
+- [ ] **Step 4b: Ligar o `Serial` ao `Arduino.h`**
+
+A Task 5 deixou `hal/Arduino.h` sem o include de `HardwareSerial.h` (o arquivo ainda não existia). Agora que existe, acrescente em `hal/Arduino.h`, junto dos outros includes (troque o comentário `// HardwareSerial.h entra na Task 6`):
+
+```cpp
+#include "HardwareSerial.h"
+```
+
+O teste `tests/test_hal_serial.cpp` inclui `Arduino.h` e usa `Serial`, então só compila depois deste passo.
 
 - [ ] **Step 5: Rodar e ver passar**
 

@@ -29,6 +29,9 @@ void halSerialInject(const char* line);
 void halTouchDown(int x, int y);
 void halTouchMove(int x, int y);
 void halTouchUp();
+bool halTouchIsDown();                 // INT e ativo em baixo: digitalRead(pino) == LOW enquanto true
+void halSetTouchIrqPin(int pin);       // chamado por TouchDrvCST92xx::setPins
+int halTouchIrqPin();                  // -1 se setPins nunca foi chamado
 
 // --- tela ---
 const uint16_t* halFrame();            // 466*466 RGB565, nunca nullptr

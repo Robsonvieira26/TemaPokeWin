@@ -44,7 +44,8 @@ long random(long max) {
 
 void pinMode(int, int) {}
 void digitalWrite(int, int) {}
-int digitalRead(int) { return LOW; }
+// Pinos sao INPUT_PULLUP: HIGH, exceto o INT do toque (ativo em baixo) com dedo na tela.
+int digitalRead(int pin) { return (pin == halTouchIrqPin() && halTouchIsDown()) ? LOW : HIGH; }
 int digitalPinToInterrupt(int pin) { return pin; }
 void attachInterrupt(int irq, void (*isr)(), int) { gIsr[irq] = isr; }
 void halFireInterrupt(int pin) {

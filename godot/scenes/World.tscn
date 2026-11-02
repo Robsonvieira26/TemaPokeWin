@@ -1,0 +1,70 @@
+[gd_scene load_steps=8 format=3 uid="uid://world_scene"]
+
+[ext_resource type="PackedScene" path="res://scenes/Pokemon.tscn" id="1"]
+[ext_resource type="Texture2D" path="res://assets/egg-scene-source.png" id="2"]
+[ext_resource type="Script" path="res://scripts/activity_zone.gd" id="3"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_eat"]
+size = Vector2(80, 40)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_train"]
+size = Vector2(80, 40)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_sleep"]
+size = Vector2(80, 40)
+
+[node name="World" type="Node2D"]
+
+[node name="Background" type="Sprite2D" parent="."]
+position = Vector2(960, 240)
+texture = ExtResource("2")
+texture_repeat = 2
+region_enabled = true
+region_rect = Rect2(0, 0, 1920, 480)
+
+[node name="ActivityZones" type="Node2D" parent="."]
+
+[node name="EatZone" type="Area2D" parent="ActivityZones"]
+position = Vector2(240, 264)
+script = ExtResource("3")
+activity_name = "eat"
+xp_per_second = 1.5
+stat_restore = "hunger"
+restore_rate = 6.0
+
+[node name="EatShape" type="CollisionShape2D" parent="ActivityZones/EatZone"]
+shape = SubResource("RectangleShape2D_eat")
+
+[node name="TrainZone" type="Area2D" parent="ActivityZones"]
+position = Vector2(960, 264)
+script = ExtResource("3")
+activity_name = "train"
+xp_per_second = 5.0
+stat_restore = "energy"
+restore_rate = -2.0
+
+[node name="TrainShape" type="CollisionShape2D" parent="ActivityZones/TrainZone"]
+shape = SubResource("RectangleShape2D_train")
+
+[node name="SleepZone" type="Area2D" parent="ActivityZones"]
+position = Vector2(1680, 264)
+script = ExtResource("3")
+activity_name = "sleep"
+xp_per_second = 0.2
+stat_restore = "energy"
+restore_rate = 8.0
+
+[node name="SleepShape" type="CollisionShape2D" parent="ActivityZones/SleepZone"]
+shape = SubResource("RectangleShape2D_sleep")
+
+[node name="Pokemon" parent="." instance=ExtResource("1")]
+position = Vector2(480, 264)
+
+[node name="Camera" type="Camera2D" parent="."]
+position = Vector2(480, 240)
+position_smoothing_enabled = true
+position_smoothing_speed = 3.0
+limit_left = 240
+limit_right = 1680
+limit_top = 0
+limit_bottom = 480

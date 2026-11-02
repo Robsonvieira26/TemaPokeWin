@@ -22,6 +22,7 @@ FetchContent_Declare(SDL3
 set(SDL_SHARED ON CACHE BOOL "" FORCE)
 set(SDL_STATIC OFF CACHE BOOL "" FORCE)
 set(SDL_TEST_LIBRARY OFF CACHE BOOL "" FORCE)
+set(SDL_INSTALL OFF CACHE BOOL "" FORCE)  # so instalamos a DLL, via nossas regras abaixo
 FetchContent_MakeAvailable(SDL3)
 
 # nlohmann/json v3.11.3 declara cmake_minimum_required < 3.5, rejeitado pelo CMake 4.x.
@@ -113,6 +114,19 @@ add_custom_command(TARGET tamapoke POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different
           ${CMAKE_SOURCE_DIR}/upstream/tools/sdcard/mons $<TARGET_FILE_DIR:tamapoke>/sdcard/mons
   COMMENT "Copiando SDL3.dll e sprites para a pasta de saida")
+
+# Empacotamento (tools/package.ps1). Dois componentes: "app" (exe, SDL3.dll, docs) e "sprites"
+# (sdcard/mons, CC BY-NC: so uso pessoal; o pacote publico nao os inclui, ver CREDITS.md).
+# Prefixo padrao fora de "C:\Program Files": <build>/install.
+if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/install CACHE PATH "Install prefix" FORCE)
+endif()
+install(TARGETS tamapoke RUNTIME DESTINATION . COMPONENT app)
+install(FILES $<TARGET_FILE:SDL3::SDL3> DESTINATION . COMPONENT app)  # so a DLL (sem headers/.lib)
+install(FILES LICENSE CREDITS.md README.md DESTINATION . COMPONENT app)
+install(DIRECTORY upstream/tools/sdcard/mons DESTINATION sdcard COMPONENT sprites)
+# Versao unica para os scripts de empacotamento (major.minor.patch).
+file(WRITE ${CMAKE_BINARY_DIR}/gen/version.txt "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
 
 # Nucleo real do Arduino_GFX (v1.6.9, submodulo) contra a nossa HAL. So compila;
 # a Task 11A liga ao resto. Decisao: docs/decisions/0001-canvas.md.

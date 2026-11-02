@@ -12,6 +12,11 @@ var energy: float = 100.0  # 0–100
 
 func _ready() -> void:
 	load_data()
+	var t := Timer.new()
+	t.wait_time = 60.0
+	t.autostart = true
+	t.timeout.connect(save_data)
+	add_child(t)
 
 func _process(delta: float) -> void:
 	hunger = maxf(0.0, hunger - 0.5  * delta)

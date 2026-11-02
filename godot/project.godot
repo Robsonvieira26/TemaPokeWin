@@ -26,6 +26,10 @@ window/size/resizable=false
 window/per_pixel_transparency/allowed=true
 window/stretch/mode="canvas_items"
 
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/phantom_camera/plugin.cfg")
+
 [rendering]
 
 renderer/rendering_method="gl_compatibility"

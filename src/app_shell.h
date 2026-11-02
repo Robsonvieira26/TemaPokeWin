@@ -1,6 +1,7 @@
 #pragma once
 // Cola SDL do desktop pet: janela, laco de eventos, mouse/teclado e acoes da bandeja.
 // A logica de estados/gestos vive em shell_logic.h (pura e testada); aqui so ha SDL.
+#include <cstdint>
 #include <memory>
 #include <string>
 #include "present.h"
@@ -40,6 +41,8 @@ class AppShell : public TrayActions {
   void handleMouseButton(const SDL_Event& ev);
   void handleKey(const SDL_Event& ev);
   void restartHost();
+  void updateTooltip(bool force);
+  void pollConsole();
   void present();
   void save();
   void hideWindow();
@@ -58,6 +61,8 @@ class AppShell : public TrayActions {
   bool leftDown_ = false;
   bool autostartAllowed_ = true;
   bool trayUp_ = false;
+  std::string tooltip_;        // ultimo texto enviado a bandeja
+  uint32_t nextTooltipMs_ = 0;
 };
 
 // Linha de comando gravada no registro Run: "<caminho do exe>" --hidden (UTF-8).

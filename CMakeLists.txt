@@ -74,7 +74,7 @@ file(GLOB TEST_SRC CONFIGURE_DEPENDS tests/*.cpp)
 # Fontes do shell/jogo compartilhadas entre o app e os testes (sem main.cpp/app_shell.cpp).
 set(CORE_SRC
   src/present.cpp src/game_host.cpp src/settings.cpp src/shell_logic.cpp
-  src/win/tray.cpp src/win/tray_menu.cpp src/win/autostart.cpp src/win/single_instance.cpp src/win/window_mode.cpp
+  src/win/tray.cpp src/win/tray_menu.cpp src/win/autostart.cpp src/win/single_instance.cpp src/win/window_mode.cpp src/win/console.cpp src/win/console_line.cpp
   ${HAL_SRC} ${UPSTREAM_GAME_SRC} ${INO_GEN})
 add_executable(tamapoke_tests ${TEST_SRC} ${CORE_SRC})
 target_include_directories(tamapoke_tests PRIVATE hal upstream src third_party/Arduino_GFX/src)

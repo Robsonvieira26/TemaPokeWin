@@ -1,4 +1,4 @@
-// Ponto de entrada do desktop pet. Flags: --hidden, --no-autostart, --data-dir <p>,
+// Ponto de entrada do desktop pet. Flags: --hidden, --console (abre o console de debug), --no-autostart, --data-dir <p>,
 // --sd-root <p>, --instance <nome> (oculta; para fumaca/dev coexistir com uma instalacao real).
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
@@ -11,6 +11,7 @@
 #include "hal_control.h"
 #include "settings.h"
 #include "win/autostart.h"
+#include "win/console.h"
 #include "win/single_instance.h"
 
 namespace {
@@ -32,12 +33,13 @@ void fatal(const char* msg) {
 }  // namespace
 
 int main(int argc, char** argv) {
-  bool hidden = false, noAutostart = false;
+  bool hidden = false, noAutostart = false, openConsole = false;
   std::string dataDir, sdRoot, instance = "TamaPoke";
   for (int i = 1; i < argc; ++i) {
     const std::string a = argv[i];
     const bool hasNext = i + 1 < argc;
     if (a == "--hidden") hidden = true;
+    else if (a == "--console") openConsole = true;
     else if (a == "--no-autostart") noAutostart = true;
     else if (a == "--data-dir" && hasNext) dataDir = argv[++i];
     else if (a == "--sd-root" && hasNext) sdRoot = argv[++i];
@@ -87,6 +89,7 @@ int main(int argc, char** argv) {
     SDL_Quit();
     return 1;
   }
+  if (openConsole) consoleToggle();
   shell.run();
   shell.host()->save();  // o host pode ter sido recriado por um reinicio
   shell.shutdown();

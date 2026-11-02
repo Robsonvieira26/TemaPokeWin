@@ -2,17 +2,23 @@
 #include <SDL3/SDL.h>
 #include <windows.h>
 #include <algorithm>
+#include <atomic>
 #include <cmath>
 #include <vector>
 #include "game_host.h"
 #include "hal_control.h"
 #include "win/autostart.h"
+#include "win/console.h"
 #include "win/single_instance.h"
 #include "win/window_mode.h"
 
 namespace {
 constexpr const char* kAutostartName = "TamaPoke";
+constexpr uint32_t kTooltipEveryMs = 60000;
+std::atomic<bool> g_closeRequested{false};  // setado pela thread do handler do console
 constexpr uint32_t kHiddenWaitCapMs = 100;  // teto da espera: mantem showRequested() responsivo
+
+void onConsoleClose() { g_closeRequested = true; }
 
 int sideFor(float scale) { return (int)std::lround(HAL_SCREEN_W * scale); }
 
@@ -78,6 +84,8 @@ bool AppShell::init(IGameHost* host, const Settings& settings, SingleInstance* s
   host_->setSoundEnabled(settings_.soundEnabled);
   if (settings_.startHidden) sm_->hide();
   trayUp_ = trayInit(this, &settings_);
+  consoleSetCloseCallback(onConsoleClose);
+  updateTooltip(true);
   return true;
 }
 
@@ -115,6 +123,9 @@ void AppShell::run() {
     SDL_PumpEvents();
     SDL_Event ev;
     while (SDL_PollEvent(&ev)) handleEvent(ev);
+    pollConsole();
+    updateTooltip(false);
+    if (g_closeRequested) sm_->requestQuit();
     if (sm_->quitRequested()) break;
     if (single_ && single_->showRequested()) showWindow();
     swipe_.step((uint32_t)SDL_GetTicks(), host_);
@@ -136,6 +147,25 @@ void AppShell::run() {
   }
 }
 
+void AppShell::updateTooltip(bool force) {
+  const uint32_t now = (uint32_t)SDL_GetTicks();
+  if (!trayUp_ || (!force && (int32_t)(now - nextTooltipMs_) < 0)) return;
+  nextTooltipMs_ = now + kTooltipEveryMs;
+  const std::string t = shellTooltipText(host_->petName(), host_->petLevel());
+  if (t == tooltip_) return;  // so atualiza a bandeja quando muda
+  tooltip_ = t;
+  traySetTooltip(t.c_str());
+}
+
+void AppShell::pollConsole() {
+  if (!consoleIsOpen()) return;
+  std::string line;
+  while (consoleReadLine(&line)) {
+    host_->injectConsole(line.c_str());
+    sm_->onInput();  // oculto: processa o comando ja no proximo passo
+  }
+}
+
 void AppShell::present() {
   if (!policy_.shouldPresent(sm_->state()) || !host_->frameDirty()) return;
   presenter_.draw(host_->frame(), presentDisplayBrightness(host_->brightness()), false);  // a regiao recorta o circulo
@@ -153,6 +183,7 @@ void AppShell::restartHost() {
   host_->setSoundEnabled(settings_.soundEnabled);
   sm_ = std::make_unique<ShellStateMachine>(host_);
   if (wasHidden) sm_->hide();
+  updateTooltip(true);
 }
 
 void AppShell::handleEvent(const SDL_Event& ev) {
@@ -230,7 +261,8 @@ void AppShell::handleKey(const SDL_Event& ev) {
     case SDLK_RIGHT: swipe_.start(SwipeDir::Right, now); break;
     case SDLK_UP: swipe_.start(SwipeDir::Up, now); break;
     case SDLK_DOWN: swipe_.start(SwipeDir::Down, now); break;
-    default: break;  // F12: Task 22b
+    case SDLK_F12: consoleToggle(); break;
+    default: break;
   }
 }
 
@@ -284,6 +316,7 @@ void AppShell::quit() { sm_->requestQuit(); }
 void AppShell::shutdown() {
   if (!window_) return;
   save();
+  consoleClose();
   if (trayUp_) trayShutdown();
   trayUp_ = false;
   presenter_.shutdown();

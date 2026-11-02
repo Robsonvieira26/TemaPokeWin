@@ -1,8 +1,9 @@
-[gd_scene load_steps=8 format=3 uid="uid://world_scene"]
+[gd_scene load_steps=9 format=3 uid="uid://world_scene"]
 
 [ext_resource type="PackedScene" path="res://scenes/Pokemon.tscn" id="1"]
 [ext_resource type="Texture2D" path="res://assets/egg-scene-source.png" id="2"]
 [ext_resource type="Script" path="res://scripts/activity_zone.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/hud.gd" id="4"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_eat"]
 size = Vector2(80, 40)
@@ -24,7 +25,7 @@ region_rect = Rect2(0, 0, 1920, 480)
 
 [node name="ActivityZones" type="Node2D" parent="."]
 
-[node name="EatZone" type="Area2D" parent="ActivityZones"]
+[node name="EatZone" type="Area2D" parent="ActivityZones" groups=["activity_zones"]]
 position = Vector2(240, 264)
 script = ExtResource("3")
 activity_name = "eat"
@@ -35,7 +36,7 @@ restore_rate = 6.0
 [node name="EatShape" type="CollisionShape2D" parent="ActivityZones/EatZone"]
 shape = SubResource("RectangleShape2D_eat")
 
-[node name="TrainZone" type="Area2D" parent="ActivityZones"]
+[node name="TrainZone" type="Area2D" parent="ActivityZones" groups=["activity_zones"]]
 position = Vector2(960, 264)
 script = ExtResource("3")
 activity_name = "train"
@@ -46,7 +47,7 @@ restore_rate = -2.0
 [node name="TrainShape" type="CollisionShape2D" parent="ActivityZones/TrainZone"]
 shape = SubResource("RectangleShape2D_train")
 
-[node name="SleepZone" type="Area2D" parent="ActivityZones"]
+[node name="SleepZone" type="Area2D" parent="ActivityZones" groups=["activity_zones"]]
 position = Vector2(1680, 264)
 script = ExtResource("3")
 activity_name = "sleep"
@@ -68,3 +69,6 @@ limit_left = 240
 limit_right = 1680
 limit_top = 0
 limit_bottom = 480
+
+[node name="HUD" type="CanvasLayer" parent="."]
+script = ExtResource("4")

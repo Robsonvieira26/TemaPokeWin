@@ -2253,6 +2253,8 @@ git commit -m "feat(hal): painel falso sobre o Arduino_Canvas real"
 
 ### Task 11B (alternativa): Canvas próprio compatível
 
+> **NÃO EXECUTAR.** A Task 10 decidiu pelo Caminho A (Arduino_GFX real, v1.6.9) — veja `docs/decisions/0001-canvas.md`. Esta tarefa é mantida só como registro da alternativa descartada.
+
 **Só execute se a Task 10 decidiu "canvas próprio". Caso contrário, pule.**
 
 **Files:**

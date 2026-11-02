@@ -1,5 +1,14 @@
+# Build + testes em todo push/PR. O job "package" so roda em tags v* (ou manualmente) e
+# gera APENAS artefatos de workflow: zip e instalador SEM sprites. Os sprites sao CC BY-NC
+# (so uso pessoal, ver CREDITS.md) e artefatos de CI podem ser publicos; por isso nada com
+# sprites e enviado e nenhuma GitHub Release e criada automaticamente.
 name: ci
-on: [push, pull_request]
+on:
+  push:
+    branches: ['**']
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
 jobs:
   windows:
     runs-on: windows-latest
@@ -12,4 +21,56 @@ jobs:
       - name: Build
         run: cmake --build build --config Release
       - name: Test
+        run: ctest --test-dir build -C Release --output-on-failure  # inclui os testes Python (gen_protos, make_icon, iss_lint...)
+
+  package:
+    needs: windows
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Configure
+        run: cmake -B build -G "Visual Studio 17 2022" -A x64
+      - name: Build
+        run: cmake --build build --config Release
+      - name: Test
         run: ctest --test-dir build -C Release --output-on-failure
+      - name: Package (zip sem sprites)
+        shell: pwsh
+        run: tools/package.ps1 -Config Release
+      - name: Locate Inno Setup
+        shell: pwsh
+        run: |
+          $iscc = Get-Command iscc -ErrorAction SilentlyContinue
+          if (-not $iscc) {
+            foreach ($d in @("${env:ProgramFiles(x86)}\Inno Setup 6", "$env:ProgramFiles\Inno Setup 6")) {
+              if (Test-Path "$d\ISCC.exe") { $iscc = "$d\ISCC.exe"; break }
+            }
+          }
+          if (-not $iscc) {
+            choco install innosetup -y --no-progress
+            $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          }
+          if ($iscc -isnot [string]) { $iscc = $iscc.Source }
+          "ISCC=$iscc" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+      - name: Build installer (sem sprites)
+        shell: pwsh
+        run: |
+          $ver = (Get-Content build/gen/version.txt -Raw).Trim()
+          $stage = (Resolve-Path "dist/stage-TamaPoke-$ver-win64/TamaPoke-$ver-win64").Path
+          & $env:ISCC "/DAppVersion=$ver" "/DSourceDir=$stage" installer\tamapoke.iss
+          if ($LASTEXITCODE -ne 0) { throw "ISCC falhou ($LASTEXITCODE)" }
+      - name: Upload zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: tamapoke-zip
+          path: dist/TamaPoke-*-win64.zip
+          if-no-files-found: error
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: tamapoke-setup
+          path: dist/TamaPokeSetup-*.exe
+          if-no-files-found: error

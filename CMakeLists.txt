@@ -122,3 +122,4 @@ endif()
 # Testes stdlib unittest dos scripts Python.
 add_test(NAME gen_protos COMMAND ${Python3_EXECUTABLE} -I ${CMAKE_SOURCE_DIR}/tests/test_gen_protos.py)
 add_test(NAME extract_u8g2_fonts COMMAND ${Python3_EXECUTABLE} -I ${CMAKE_SOURCE_DIR}/tests/test_extract_u8g2_fonts.py)
+add_test(NAME make_icon COMMAND ${Python3_EXECUTABLE} -I ${CMAKE_SOURCE_DIR}/tests/test_make_icon.py)

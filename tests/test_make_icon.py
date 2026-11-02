@@ -63,7 +63,13 @@ class IcoTest(unittest.TestCase):
     def test_committed_ico_matches_generator(self):
         committed = (ROOT / "assets" / "tamapoke.ico").read_bytes()
         self.check_ico(committed)
-        self.assertEqual(committed, self.generated, "rode: python -I tools/make_icon.py")
+        # compara pixels, nao bytes: a saida do zlib varia entre versoes do Python
+        _, a = parse_ico(committed)
+        _, b = parse_ico(self.generated)
+        for ea, eb in zip(a, b):
+            pa = make_icon.read_png(committed[ea["off"]:ea["off"] + ea["size"]])
+            pb = make_icon.read_png(self.generated[eb["off"]:eb["off"] + eb["size"]])
+            self.assertEqual(pa, pb, "rode: python -I tools/make_icon.py")
 
     def test_committed_png_256(self):
         data = (ROOT / "assets" / "tamapoke-256.png").read_bytes()

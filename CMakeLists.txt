@@ -1,9 +1,13 @@
 cmake_minimum_required(VERSION 3.26)  # 3.26: copy_directory_if_different
-project(tamapoke CXX)
+project(tamapoke VERSION 0.1.0.0 LANGUAGES CXX RC)  # versao unica: assets/version.h.in -> app.rc
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 enable_testing()
+
+# CRT estatico: o exe nao depende do redistribuivel do VC++. Definido uma vez, antes de
+# qualquer alvo/dependencia, para que todos (gfx_core, nlohmann, testes, app, SDL3.dll) concordem.
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 if (MSVC)
   add_compile_options(/utf-8 /Zc:__cplusplus /permissive- /W3)
@@ -94,7 +98,10 @@ add_custom_command(TARGET tamapoke_tests POST_BUILD
           $<TARGET_FILE:SDL3::SDL3> $<TARGET_FILE_DIR:tamapoke_tests>)
 
 # O app: desktop pet (janela redonda, sem borda, sempre no topo). /J: o firmware compila aqui.
-add_executable(tamapoke WIN32 src/main.cpp src/app_shell.cpp ${CORE_SRC})
+configure_file(assets/version.h.in ${CMAKE_BINARY_DIR}/gen/version.h @ONLY)
+add_executable(tamapoke WIN32 src/main.cpp src/app_shell.cpp ${CORE_SRC} assets/app.rc)
+target_include_directories(tamapoke PRIVATE ${CMAKE_BINARY_DIR}/gen)  # version.h (tambem para o RC)
+set_source_files_properties(assets/app.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_SOURCE_DIR}/assets/tamapoke.ico)
 target_include_directories(tamapoke PRIVATE hal upstream src third_party/Arduino_GFX/src)
 add_dependencies(tamapoke ino_gen)
 target_link_libraries(tamapoke PRIVATE SDL3::SDL3 nlohmann_json::nlohmann_json gfx_core Shell32 Ole32)

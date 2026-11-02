@@ -1,0 +1,34 @@
+#include <windows.h>
+#include "version.h"
+
+// O ID 1 e o que src/win/tray.cpp carrega (LoadIcon MAKEINTRESOURCE(1)); tambem e o
+// primeiro icone do exe, usado pelo Explorer.
+1 ICON "tamapoke.ico"
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION TAMAPOKE_VERSION_COMMA
+PRODUCTVERSION TAMAPOKE_VERSION_COMMA
+FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
+FILEFLAGS 0
+FILEOS VOS_NT_WINDOWS32
+FILETYPE VFT_APP
+FILESUBTYPE VFT2_UNKNOWN
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "041604b0"  // pt-BR, Unicode
+    BEGIN
+      VALUE "FileDescription", "TamaPoke"
+      VALUE "FileVersion", TAMAPOKE_VERSION_STR
+      VALUE "InternalName", "tamapoke"
+      VALUE "OriginalFilename", "tamapoke.exe"
+      VALUE "ProductName", "TamaPoke para Windows"
+      VALUE "ProductVersion", TAMAPOKE_VERSION_STR
+      VALUE "LegalCopyright", "Codigo MIT. Sprites CC BY-NC 4.0. Veja CREDITS.md."
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x416, 1200
+  END
+END

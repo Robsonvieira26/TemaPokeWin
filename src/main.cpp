@@ -1,5 +1,5 @@
 // Ponto de entrada do desktop pet. Flags: --hidden, --console (abre o console de debug), --no-autostart, --data-dir <p>,
-// --sd-root <p>, --instance <nome> (oculta; para fumaca/dev coexistir com uma instalacao real).
+// --sd-root <p>, --quit (pede a instancia em execucao para salvar e sair), --instance <nome> (oculta; para fumaca/dev coexistir com uma instalacao real).
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 #include <windows.h>
@@ -33,17 +33,23 @@ void fatal(const char* msg) {
 }  // namespace
 
 int main(int argc, char** argv) {
-  bool hidden = false, noAutostart = false, openConsole = false;
+  bool quitOnly = false, hidden = false, noAutostart = false, openConsole = false;
   std::string dataDir, sdRoot, instance = "TamaPoke";
   for (int i = 1; i < argc; ++i) {
     const std::string a = argv[i];
     const bool hasNext = i + 1 < argc;
-    if (a == "--hidden") hidden = true;
+    if (a == "--quit") quitOnly = true;
+    else if (a == "--hidden") hidden = true;
     else if (a == "--console") openConsole = true;
     else if (a == "--no-autostart") noAutostart = true;
     else if (a == "--data-dir" && hasNext) dataDir = argv[++i];
     else if (a == "--sd-root" && hasNext) sdRoot = argv[++i];
     else if (a == "--instance" && hasNext) instance = argv[++i];
+  }
+  if (quitOnly) {
+    // Sem efeitos colaterais: nada de dados, janela, mutex ou registro.
+    if (!SingleInstance::requestQuit(instance.c_str())) return 0;  // nada rodando
+    return SingleInstance::waitForExit(instance.c_str(), 10000) ? 0 : 2;
   }
   if (dataDir.empty()) dataDir = defaultDataDir();
   if (sdRoot.empty()) {

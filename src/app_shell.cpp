@@ -128,6 +128,7 @@ void AppShell::run() {
     if (g_closeRequested) sm_->requestQuit();
     if (sm_->quitRequested()) break;
     if (single_ && single_->showRequested()) showWindow();
+    if (single_ && single_->quitRequested()) quit();  // --quit de outro processo: salva e sai
     swipe_.step((uint32_t)SDL_GetTicks(), host_);
 
     if (sm_->state() == ShellState::Hidden) {

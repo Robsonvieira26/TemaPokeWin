@@ -21,10 +21,25 @@ class SingleInstance {
   // fundem em um). So a instancia primaria ve pedidos; senao sempre false.
   bool showRequested();
 
-  // Libera mutex e evento. Idempotente; o destrutor chama.
+  // Nao bloqueia. true uma unica vez por pedido de `requestQuit` (auto-reset).
+  // So a instancia primaria; senao sempre false.
+  bool quitRequested();
+
+  // Chamado por OUTRO processo (--quit): sinaliza o evento "Local\<base>Quit" da
+  // instancia em execucao. false se nao ha instancia (nao cria nada).
+  static bool requestQuit(const char* baseName = "TamaPoke");
+
+  // true se o mutex "Local\<base>" existe (ha uma instancia primaria viva).
+  static bool isRunning(const char* baseName = "TamaPoke");
+
+  // Espera (poll de ~50 ms) a instancia sumir. true = nao roda (mais); false = estourou.
+  static bool waitForExit(const char* baseName, unsigned timeoutMs);
+
+  // Libera mutex e eventos. Idempotente; o destrutor chama.
   void release();
 
  private:
   void* mutex_ = nullptr;  // HANDLE
-  void* event_ = nullptr;  // HANDLE
+  void* event_ = nullptr;  // HANDLE (show)
+  void* quitEvent_ = nullptr;  // HANDLE (quit)
 };

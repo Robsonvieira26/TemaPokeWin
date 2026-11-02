@@ -4,6 +4,7 @@
 #include "win/single_instance.h"
 #include <windows.h>
 #include <string>
+#include <thread>
 
 namespace {
 std::string base(const char* sufixo) {
@@ -88,4 +89,103 @@ TEST(single_instance, nome_com_utf8) {
   CHECK(a.acquire(n.c_str()));
   CHECK(!b.acquire(n.c_str()));
   CHECK(a.showRequested());
+}
+
+// ---- --quit: pedido de saida da instancia em execucao ----
+
+TEST(single_instance, quit_pedido_chega_uma_vez_e_colapsa) {
+  std::string n = base("_q1");
+  SingleInstance a;
+  CHECK(a.acquire(n.c_str()));
+  CHECK(!a.quitRequested());
+  CHECK(SingleInstance::requestQuit(n.c_str()));
+  CHECK(SingleInstance::requestQuit(n.c_str()));
+  CHECK(SingleInstance::requestQuit(n.c_str()));
+  CHECK(a.quitRequested());
+  CHECK(!a.quitRequested());
+}
+
+TEST(single_instance, quit_sem_primaria_nao_cria_nada) {
+  std::string n = base("_q2");
+  CHECK(!SingleInstance::requestQuit(n.c_str()));
+  CHECK(!SingleInstance::isRunning(n.c_str()));
+  SingleInstance a;
+  CHECK(a.acquire(n.c_str()));
+  CHECK(!a.quitRequested());  // o pedido perdido nao ficou pendente
+  CHECK(SingleInstance::isRunning(n.c_str()));
+}
+
+TEST(single_instance, quit_requested_antes_de_acquire_e_apos_release) {
+  std::string n = base("_q3");
+  SingleInstance a;
+  CHECK(!a.quitRequested());
+  CHECK(a.acquire(n.c_str()));
+  a.release();
+  CHECK(!a.quitRequested());
+}
+
+TEST(single_instance, is_running_segue_o_ciclo_de_vida) {
+  std::string n = base("_q4");
+  CHECK(!SingleInstance::isRunning(n.c_str()));
+  SingleInstance a;
+  CHECK(a.acquire(n.c_str()));
+  CHECK(SingleInstance::isRunning(n.c_str()));
+  a.release();
+  CHECK(!SingleInstance::isRunning(n.c_str()));
+}
+
+TEST(single_instance, wait_for_exit_imediato_quando_nao_roda) {
+  std::string n = base("_q5");
+  ULONGLONG t0 = GetTickCount64();
+  CHECK(SingleInstance::waitForExit(n.c_str(), 5000));
+  CHECK(GetTickCount64() - t0 < 500);
+}
+
+TEST(single_instance, wait_for_exit_estoura_o_prazo) {
+  std::string n = base("_q6");
+  SingleInstance a;
+  CHECK(a.acquire(n.c_str()));
+  ULONGLONG t0 = GetTickCount64();
+  CHECK(!SingleInstance::waitForExit(n.c_str(), 150));
+  ULONGLONG dt = GetTickCount64() - t0;
+  CHECK(dt >= 130);
+  CHECK(dt < 2000);
+}
+
+TEST(single_instance, wait_for_exit_ve_a_primaria_sair_em_outra_thread) {
+  std::string n = base("_q7");
+  SingleInstance a;
+  CHECK(a.acquire(n.c_str()));
+  std::thread t([&a] {
+    Sleep(100);
+    a.release();
+  });
+  ULONGLONG t0 = GetTickCount64();
+  bool ok = SingleInstance::waitForExit(n.c_str(), 5000);
+  t.join();
+  CHECK(ok);
+  CHECK(GetTickCount64() - t0 < 2000);
+}
+
+TEST(single_instance, show_e_quit_sao_independentes) {
+  std::string n = base("_q8");
+  SingleInstance a, b;
+  CHECK(a.acquire(n.c_str()));
+  CHECK(SingleInstance::requestQuit(n.c_str()));
+  CHECK(!a.showRequested());
+  CHECK(a.quitRequested());
+  CHECK(!b.acquire(n.c_str()));
+  CHECK(!a.quitRequested());
+  CHECK(a.showRequested());
+}
+
+TEST(single_instance, quit_com_nome_utf8) {
+  std::string n = base("_Jos\xC3\xA9_q9");
+  SingleInstance a;
+  CHECK(a.acquire(n.c_str()));
+  CHECK(SingleInstance::isRunning(n.c_str()));
+  CHECK(SingleInstance::requestQuit(n.c_str()));
+  CHECK(a.quitRequested());
+  a.release();
+  CHECK(!SingleInstance::isRunning(n.c_str()));
 }

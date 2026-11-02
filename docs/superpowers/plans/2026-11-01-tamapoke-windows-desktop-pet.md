@@ -3936,6 +3936,14 @@ git commit -m "feat(win): silhueta redonda com fallback de regiao e hit-test"
 
 ### Task 20: `AppShell` — máquina de estados e laço principal
 
+> **CORREÇÕES (descobertas na execução; valem sobre o código abaixo, que é só um esboço):**
+> 1. **Política de tick.** O firmware se auto-pacea (`frameIntervalMs`: ~10 fps, 85 ms no minijogo; `idleDelayMs` = 1 ms por passada, 20 ms com a tela apagada; toque lido a cada ~20 ms). `TickPolicy::tickIntervalMs` deve devolver **0 para `Visible` e `ScreenOff`** (= chamar `host_->tick()` continuamente; o `delay()` do firmware, via `SDL_Delay`, segura a CPU) e **1000 só para `Hidden`**. Ajuste o teste `visible_pede_tick_a_10hz` para `Visible == 0`, `ScreenOff == 0`, `Hidden == 1000`. Em `Hidden`, além do tick de 1 Hz, faça um `tick()` imediato após qualquer entrada (mouse/teclado) ou ao mostrar a janela.
+> 2. **Laço principal.** Estrutura: `pumpEvents()`; se `Hidden` e ainda não passou 1 s e não houve entrada → `SDL_WaitEventTimeout(&ev, restante)` (devolvendo o evento à fila só se ele foi de fato recebido) e `continue`; senão `host_->tick()`, trate `wantsRestart()`, e apresente se `frameDirty()` e o estado apresenta.
+> 3. **Bug do esboço:** o lambda do `halSetIdleWaiter` chama `SDL_PushEvent(&ev)` mesmo quando `SDL_WaitEventTimeout` devolve `false` (timeout), empurrando um evento não inicializado. Só empurre se o retorno for `true`.
+> 4. **Fechar/encerrar.** Não há botão X numa janela sem borda; Alt+F4 gera `SDL_EVENT_WINDOW_CLOSE_REQUESTED`, e o Windows pode gerar `SDL_EVENT_QUIT` no logoff/desligamento. Em ambos: **sempre `host_->save()`** (mesmo já estando em `Hidden`, onde `hide()` é idempotente e não salvaria) e depois esconder. Só `Sair` da bandeja encerra o processo (`requestQuit()`).
+> 5. **Reinício** (`wantsRestart()`): destruir o host e criar outro; `GameHost::boot()` já zera o global `pet`.
+> 6. **`/J`** (char sem sinal) vale também para o alvo `tamapoke`; ele compila o firmware.
+
 **Files:**
 - Create: `src/app_shell.h`, `src/app_shell.cpp`
 - Test: `tests/test_app_shell.cpp`

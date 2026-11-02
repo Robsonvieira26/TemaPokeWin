@@ -95,9 +95,9 @@ Máquina de três estados no `app_shell`. O `game_host` só obedece.
 
 | Estado | Como entra | `tick()` | Render | Áudio |
 |---|---|---|---|---|
-| `Visible` | janela na tela | 10 Hz (100 ms, igual upstream) | sim | sim |
-| `Hidden` | fechou a janela, bandeja "Esconder", ou logon com `--hidden` | 1 Hz | não | sim |
-| `ScreenOff` | F2 ou PWR curto | 1 Hz | janela preta (brilho 0) | sim |
+| `Visible` | janela na tela | contínuo: o firmware se auto-pacea (render a ~10 fps, 85 ms no minijogo; `delay(1)` entre passadas; toque lido a cada ~20 ms) | sim | sim |
+| `Hidden` | fechou a janela, bandeja "Esconder", ou logon com `--hidden` | 1 Hz, mais um `tick()` imediato após qualquer entrada ou ao mostrar | não | sim |
+| `ScreenOff` | F2 ou PWR curto | contínuo (o firmware já relaxa para `delay(20)` por passada e não renderiza) | janela preta (brilho 0) | sim |
 
 - **`millis()` não desacelera.** Continua `SDL_GetTicks()` real. Em `Hidden` só chamamos
   `loop()` menos vezes; o upstream vê saltos de ~1000 ms, como já tolera quando a tela
@@ -106,8 +106,11 @@ Máquina de três estados no `app_shell`. O `game_host` só obedece.
   mecanismo cobre escondido, tela apagada e app fechado. Ao voltar para `Visible`, um
   `tick()` extra deixa o upstream ver o epoch novo; a regra +1 nível/hora com teto de duas
   semanas é dele.
-- **Esperar de verdade:** em `Hidden`/`ScreenOff`, `SDL_WaitEventTimeout(ev, 1000)`. Mesma
-  primitiva que `halIdleWait(ms)` usa para `esp_light_sleep_start`. CPU ocioso ≈ 0%.
+- **Esperar de verdade:** em `Hidden`, `SDL_WaitEventTimeout` até o próximo evento ou 1 s.
+  Em `Visible` e `ScreenOff` não há espera do shell: o `delay()` do próprio firmware (via `SDL_Delay`)
+  segura a CPU. A cadência de 10 Hz do rascunho inicial foi **descartada**: o firmware foi escrito para
+  o `loop()` girar continuamente e ler o toque a cada ~20 ms; chamá-lo a 10 Hz deixaria o toque e o
+  arrasto com até 100 ms de latência.
 - **Áudio toca escondido.** Silenciar é escolha explícita na bandeja, persistida via o
   `audioSetEnabled` do upstream.
 - **Save** em: transição `Visible→Hidden`; a cada 5 min em `Hidden`; `SDL_EVENT_QUIT`;

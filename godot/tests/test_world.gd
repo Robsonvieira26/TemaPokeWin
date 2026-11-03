@@ -1,0 +1,63 @@
+extends "res://tests/test_base.gd"
+# Testa o World com o cenário Vale Termal importado do PokePet:
+# habitat instanciado, zonas nas marcas do vale e navegação derivada
+# do mapa de colisão embutido na cena (Colisao: Agua/Penhascos/Objetos).
+
+const SPAWN := Vector2(950, 723)  # Spawn do vale_termal.tscn
+
+func _fresh_world() -> Node:
+	return load("res://scenes/World.tscn").instantiate()
+
+func _centroide(p: PackedVector2Array) -> Vector2:
+	var c := Vector2.ZERO
+	for v in p:
+		c += v
+	return c / p.size()
+
+func test_world_instancia_habitat_e_zonas() -> void:
+	var w := _fresh_world()
+	assert_true(w.get_node_or_null("Habitat") != null, "habitat instanciado no World")
+	var nomes := {}
+	for n in w.get_children():
+		if n.is_in_group("activity_zones"):
+			nomes[n.get("activity_name")] = true
+	assert_true(nomes.has("eat"), "zona de comer (comedouro do vale)")
+	assert_true(nomes.has("train"), "zona de treino (clareira de treino)")
+	assert_true(nomes.has("sleep"), "zona de dormir (cama/abrigo)")
+	w.free()
+
+func test_nav_derivado_do_mapa_de_colisao() -> void:
+	var w := _fresh_world()
+	var poly: NavigationPolygon = w._build_nav_polygon()
+	assert_true(poly.get_outline_count() >= 100, "colisões do habitat viram outlines (111 esperados)")
+	assert_true(poly.get_polygon_count() > 0, "polígonos navegáveis gerados")
+	var spawn_inside := false
+	for i in poly.get_polygon_count():
+		if Geometry2D.is_point_in_polygon(SPAWN, poly.get_polygon(i)):
+			spawn_inside = true
+	assert_true(spawn_inside, "spawn (950,723) navegável")
+	# centroide de um polígono de água não pode cair na área navegável
+	var agua: CollisionPolygon2D = w.get_node("Habitat/Colisao/Agua/agua_1")
+	var c := _centroide(agua.polygon)
+	var agua_outside := true
+	for i in poly.get_polygon_count():
+		if Geometry2D.is_point_in_polygon(c, poly.get_polygon(i)):
+			agua_outside = false
+	assert_true(agua_outside, "água fora da área navegável")
+	w.free()
+
+func test_spawn_e_zonas_fora_de_colisao() -> void:
+	var w := _fresh_world()
+	var outlines: Array[PackedVector2Array] = w._obstacle_outlines()
+	assert_true(outlines.size() > 0, "obstáculos coletados do habitat")
+	var pontos := {
+		"spawn": SPAWN,
+		"comedouro": Vector2(830, 675),
+		"treino": Vector2(915, 832),
+		"cama": Vector2(1020, 648),
+	}
+	for nome in pontos:
+		for pts in outlines:
+			assert_true(not Geometry2D.is_point_in_polygon(pontos[nome], pts),
+					"%s (%s) não pode estar dentro de colisão" % [nome, pontos[nome]])
+	w.free()

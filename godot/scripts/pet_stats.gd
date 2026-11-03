@@ -125,9 +125,10 @@ func local_hour_now() -> float:
 
 # Fuso local do sistema, a partir da diferença relógio local × UTC.
 func _system_utc_offset() -> float:
+	# Valores de Dictionary são Variant: converte para float explicitamente.
 	var local := Time.get_time_dict_from_system()
 	var utc   := Time.get_time_dict_from_system(true)
-	var diff  := (float(local.hour) + local.minute / 60.0) - (float(utc.hour) + utc.minute / 60.0)
+	var diff: float = (float(local.hour) + float(local.minute) / 60.0) - (float(utc.hour) + float(utc.minute) / 60.0)
 	return fposmod(diff + 12.0, 24.0) - 12.0
 
 # ── Save ──────────────────────────────────────────────────────────────

@@ -2047,7 +2047,7 @@ centered = true
 offset = Vector2(0, -32)
 flip_h = true
 
-[node name="ponte_de_tabuas_norte_1" type="Sprite2D" parent="Objetos"]
+[node name="ponte_de_tabuas_norte_1" type="Sprite2D" parent="CaminhoDePedras"]
 position = Vector2(556, 93)
 texture = ExtResource("130_tex")
 centered = true
@@ -4571,7 +4571,7 @@ centered = true
 offset = Vector2(0, -16)
 flip_h = true
 
-[node name="escada_de_pedra_1" type="Sprite2D" parent="Objetos"]
+[node name="escada_de_pedra_1" type="Sprite2D" parent="CaminhoDePedras"]
 position = Vector2(894.5, 506)
 texture = ExtResource("292_tex")
 centered = true
@@ -5394,7 +5394,7 @@ centered = true
 offset = Vector2(0, -16)
 flip_h = true
 
-[node name="cama_aconchegante_1" type="Sprite2D" parent="Objetos"]
+[node name="cama_aconchegante_1" type="Sprite2D" parent="CaminhoDePedras"]
 position = Vector2(1050, 656)
 texture = ExtResource("341_tex")
 centered = true
@@ -6361,7 +6361,7 @@ texture = ExtResource("191_tex")
 centered = true
 offset = Vector2(0, -16)
 
-[node name="ponte_de_tabuas_1" type="Sprite2D" parent="Objetos"]
+[node name="ponte_de_tabuas_1" type="Sprite2D" parent="CaminhoDePedras"]
 position = Vector2(534, 859)
 texture = ExtResource("413_tex")
 centered = true

@@ -5,7 +5,7 @@ extends CharacterBody2D
 
 enum State { WANDER, IDLE, ACTIVITY, SEEK }
 
-const WALK_SPEED := 60.0
+const WALK_SPEED := 30.0  # desktop pet: passinho tranquilo (60 era frenético)
 const HUNGER_LOW := 30.0   # fome abaixo disso → busca comida
 const ENERGY_LOW := 20.0   # energia abaixo disso → busca a cama
 const STUCK_SECONDS := 5.0  # preso tentando chegar a um lugar → faz outro caminho
@@ -107,7 +107,7 @@ func _navigate() -> bool:
 	return false
 
 # Progresso rumo ao destino, amostrado a cada 0,5 s (a WALK_SPEED, andar
-# desloca ~30 px por amostra; ficar preso, quase nada). 5 s parados → desvia.
+# desloca ~15 px por amostra; ficar preso, quase nada). 5 s parados → desvia.
 func _track_stuck(delta: float) -> void:
 	_stuck_check -= delta
 	if _stuck_check > 0.0:

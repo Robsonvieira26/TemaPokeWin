@@ -4,3 +4,7 @@ out/
 *.user
 settings.json
 dist/
+.superpowers/
+
+godot/src/tray/godot-cpp/
+godot/src/tray/bin/

@@ -1,0 +1,12 @@
+#!/usr/bin/env python
+# Build da GDExtension (no Windows, com MSVC e SCons instalados):
+#   git clone --branch master https://github.com/godotengine/godot-cpp godot-cpp
+#   scons platform=windows arch=x86_64
+# Saída: bin/tamapoke_tray.dll
+
+env = SConscript("godot-cpp/SConstruct")
+env.Append(CPPPATH=["src/"])
+if env["platform"] == "windows":
+    env.Append(LIBS=["shell32"])
+
+env.SharedLibrary(target="bin/tamapoke_tray", source=["src/tray_extension.cpp"])

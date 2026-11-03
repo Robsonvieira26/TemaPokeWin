@@ -1,137 +1,140 @@
 extends CharacterBody2D
-
-# Controlador autônomo do pokémon — máquina de estados + animações PMD Collab.
-# Sprites: PMD Collab (sprites.pmdcollab.org), carregados por PmdSpriteLoader.
-# Espécie determinada pelo nível do pet: Charmander → Charmeleon → Charizard.
+# Comportamento do bicho: FSM autônoma + navegação pelo jardim + 8 direções.
+# Sprites: PMD Collab via PmdSpriteLoader; espécie pelo nível (1/17/37).
+# As necessidades se resolvem sozinhas: fome baixa → tigela; energia baixa → cama.
 
 enum State { WANDER, IDLE, ACTIVITY, SEEK }
 
-const WALK_SPEED    := 60.0
-const GROUND_Y      := 264.0
-const WORLD_LEFT    := 32.0
-const WORLD_RIGHT   := 1888.0
-const HUNGER_LOW    := 30.0   # vai buscar comida abaixo deste valor
-const ENERGY_LOW    := 20.0   # vai dormir abaixo deste valor
+const WALK_SPEED := 60.0
+const HUNGER_LOW := 30.0   # fome abaixo disso → busca comida
+const ENERGY_LOW := 20.0   # energia abaixo disso → busca a cama
 
-# Mapeamento nível → espécie PMD Collab
-const LEVEL_THRESHOLDS := { 37: "0006", 17: "0005", 1: "0004" }
+var state:       State = State.WANDER
+var state_timer: float = 0.0
+var active_zone: Node  = null
+var _seek_zone:  Node  = null
+var _facing:     int   = PmdSpriteLoader.DIR_SOUTH
+var _species_id: String = "0004"
+var _last_level: int    = 1
+var hovered := false  # cursor sobre o bicho (usado pelo balão e pelo arrasto da janela)
 
-var state:        State  = State.WANDER
-var direction:    int    = 1
-var state_timer:  float  = 0.0
-var active_zone:  Node   = null
-var _species_id:  String = "0004"
-var _last_level:  int    = 1
-var _seek_target: Vector2 = Vector2.ZERO
-
-@onready var camera: Camera2D         = $"../Camera"
+@onready var nav: NavigationAgent2D = $NavAgent
 @onready var sprite: AnimatedSprite2D = $Visual
 
 func _ready() -> void:
-	position = Vector2(480.0, GROUND_Y)
+	add_to_group("pet")
+	$PetArea.input_event.connect(_on_pet_input)
+	$PetArea.mouse_entered.connect(func(): hovered = true)
+	$PetArea.mouse_exited.connect(func(): hovered = false)
 	_load_sprites()
 	_set_state(State.WANDER)
 
 func _physics_process(delta: float) -> void:
+	# NavigationServer só sincroniza o mapa depois do primeiro passo de física
+	if NavigationServer2D.map_get_iteration_id(nav.get_navigation_map()) == 0:
+		return
 	state_timer -= delta
-
-	# recarrega sprites se evoluiu
 	if PetStats.level != _last_level:
 		_last_level = PetStats.level
 		_load_sprites()
-
 	match state:
-		State.WANDER:   _do_wander(delta)
+		State.WANDER:   _do_wander()
 		State.IDLE:     _do_idle()
 		State.ACTIVITY: _do_activity(delta)
-		State.SEEK:     _do_seek(delta)
+		State.SEEK:     _do_seek()
 
-	if camera:
-		camera.position.x = position.x
+func _world() -> Node:
+	return get_tree().get_first_node_in_group("world")
 
-func _do_wander(delta: float) -> void:
-	position.x += direction * WALK_SPEED * delta
-	position.y  = GROUND_Y
-	position.x  = clampf(position.x, WORLD_LEFT, WORLD_RIGHT)
-
-	if position.x <= WORLD_LEFT or position.x >= WORLD_RIGHT:
-		direction *= -1
-		_update_sprite_flip()
-
-	if state_timer <= 0.0:
-		var need := _check_need()
-		if need != "":
-			_start_seek(need)
-		else:
-			_set_state(State.IDLE)
+func _do_wander() -> void:
+	if _navigate():
+		_set_state(State.IDLE)
+	elif state_timer <= 0.0:
+		nav.target_position = _world().random_wander_point()
+		state_timer = 10.0
 
 func _do_idle() -> void:
-	position.y = GROUND_Y
-	if state_timer <= 0.0:
-		var need := _check_need()
-		if need != "":
-			_start_seek(need)
-		else:
-			direction = [-1, 1].pick_random()
-			_set_state(State.WANDER)
+	velocity = Vector2.ZERO
+	if state_timer > 0.0:
+		return
+	var need := _check_need()
+	if need != "":
+		_start_seek(need)
+	else:
+		_set_state(State.WANDER)
 
 func _do_activity(delta: float) -> void:
-	position.y = GROUND_Y
+	velocity = Vector2.ZERO
 	if active_zone:
 		PetStats.add_xp(active_zone.xp_per_second * delta, active_zone.activity_name)
 		match active_zone.stat_restore:
 			"hunger": PetStats.restore_hunger(active_zone.restore_rate * delta)
 			"energy": PetStats.restore_energy(active_zone.restore_rate * delta)
+		if active_zone.activity_name == "sleep" \
+				and PetStats.is_night(PetStats.local_hour_now()) \
+				and PetStats.hunger >= HUNGER_LOW:
+			state_timer = maxf(state_timer, 1.0)  # segura na cama
+			PetStats.asleep = true
 	if state_timer <= 0.0:
+		PetStats.asleep = false
 		_set_state(State.WANDER)
 
-func _do_seek(delta: float) -> void:
-	position.y = GROUND_Y
-	var dx := _seek_target.x - position.x
-	if absf(dx) < 8.0:
-		# chegou perto o suficiente; a ActivityZone dispara body_entered
-		_set_state(State.IDLE)
-		return
-	direction = 1 if dx > 0 else -1
-	position.x += direction * WALK_SPEED * delta
-	position.x  = clampf(position.x, WORLD_LEFT, WORLD_RIGHT)
-	_update_sprite_flip()
-	if state_timer <= 0.0:
+func _do_seek() -> void:
+	if _navigate():
+		_set_state(State.IDLE)  # chegou; a zona dispara enter_activity pelo body_entered
+	elif state_timer <= 0.0:
 		_set_state(State.WANDER)  # desistiu
+
+# Navega um passo. Devolve true quando chegou ao destino.
+func _navigate() -> bool:
+	if nav.is_navigation_finished():
+		velocity = Vector2.ZERO
+		return true
+	var next := nav.get_next_path_position()
+	velocity = (next - global_position).normalized() * WALK_SPEED
+	move_and_slide()
+	_face(velocity)
+	_play_anim("Walk%d" % _facing)
+	return false
 
 func _check_need() -> String:
 	if PetStats.hunger < HUNGER_LOW:
 		return "eat"
-	if PetStats.energy < ENERGY_LOW:
+	if PetStats.energy < ENERGY_LOW or PetStats.is_night(PetStats.local_hour_now()):
 		return "sleep"
 	return ""
 
 func _start_seek(zone_name: String) -> void:
 	for zone: Node in get_tree().get_nodes_in_group("activity_zones"):
 		if zone.get("activity_name") == zone_name:
-			_seek_target = (zone as Node2D).global_position
-			state      = State.SEEK
-			state_timer = 20.0
-			_play_anim("Walk")
+			_seek_zone = zone
+			nav.target_position = (zone as Node2D).global_position
+			state       = State.SEEK
+			state_timer = 30.0
+			_play_anim("Walk%d" % _facing)
 			return
-	_set_state(State.WANDER)  # zona não encontrada, continua vagando
+	_set_state(State.WANDER)  # zona não encontrada
 
 func _set_state(new_state: State) -> void:
 	state = new_state
+	PetStats.asleep = false
 	match new_state:
 		State.WANDER:
-			state_timer = randf_range(4.0, 9.0)
-			_play_anim("Walk")
+			state_timer = 10.0
+			if _world():
+				nav.target_position = _world().random_wander_point()
+			_play_anim("Walk%d" % _facing)
 		State.IDLE:
 			state_timer = randf_range(1.5, 4.0)
 			_play_anim("Idle")
 		State.ACTIVITY:
 			state_timer = randf_range(4.0, 10.0)
-			# animação de atividade definida em enter_activity()
+			# animação da atividade definida em enter_activity()
 		State.SEEK:
 			pass  # configurado em _start_seek
 
 func enter_activity(zone: Node) -> void:
+	if state == State.SEEK and zone != _seek_zone: return
 	active_zone = zone
 	_set_state(State.ACTIVITY)
 	match zone.activity_name:
@@ -142,11 +145,8 @@ func enter_activity(zone: Node) -> void:
 func exit_activity(_zone: Node) -> void:
 	if active_zone == _zone:
 		active_zone = null
-		_set_state(State.WANDER)
-
-func startle() -> void:
-	_set_state(State.IDLE)
-	state_timer = 2.0
+		if state != State.WANDER:
+			_set_state(State.WANDER)
 
 # ── Sprites ──────────────────────────────────────────────────────────
 
@@ -159,22 +159,53 @@ func _load_sprites() -> void:
 	if frames and sprite:
 		sprite.sprite_frames = frames
 
+func _face(v: Vector2) -> void:
+	_facing = PmdSpriteLoader.direction_for_velocity(v)
+
 func _play_anim(anim_name: String) -> void:
 	if sprite == null or sprite.sprite_frames == null:
 		return
-	# Fallback: se animação não existe (ex: Charizard sem Eat) usa Idle
 	if not sprite.sprite_frames.has_animation(anim_name):
-		anim_name = "Idle"
+		anim_name = "Idle"  # fallback (ex.: Charizard sem Eat)
+	if not sprite.sprite_frames.has_animation(anim_name):
+		return
 	if sprite.animation != anim_name:
 		sprite.play(anim_name)
-	_update_sprite_flip()
-
-func _update_sprite_flip() -> void:
-	if sprite:
-		sprite.flip_h = (direction == -1)
 
 static func _species_for_level(lvl: int) -> String:
-	for threshold in [37, 17, 1]:
-		if lvl >= threshold:
-			return LEVEL_THRESHOLDS[threshold]
+	if lvl >= 37:
+		return "0006"
+	if lvl >= 17:
+		return "0005"
 	return "0004"
+
+# ── Carinho ──────────────────────────────────────────────────────────
+
+func _on_pet_input(_viewport: Node, event: InputEvent, _shape_idx: int) -> void:
+	if event is InputEventMouseButton \
+			and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		_pet()
+
+func _pet() -> void:
+	if PetStats.try_pet(Time.get_ticks_msec() / 1000.0):
+		_react()
+
+func _react() -> void:
+	# pulso de escala + corações flutuando
+	var tw := create_tween()
+	tw.tween_property(sprite, "scale", Vector2(1.15, 1.15), 0.08)
+	tw.tween_property(sprite, "scale", Vector2.ONE, 0.12)
+	for i in 3:
+		_heart(Vector2(randf_range(-14.0, 14.0), -34.0))
+
+func _heart(at: Vector2) -> void:
+	var lbl := Label.new()
+	lbl.text = "♥"
+	lbl.modulate = Color(1.0, 0.42, 0.62)
+	lbl.add_theme_font_size_override("font_size", 12)
+	lbl.position = at
+	add_child(lbl)
+	var tw := create_tween()
+	tw.tween_property(lbl, "position", at + Vector2(0, -34), 0.9)
+	tw.parallel().tween_property(lbl, "modulate:a", 0.0, 0.9)
+	tw.tween_callback(lbl.queue_free)

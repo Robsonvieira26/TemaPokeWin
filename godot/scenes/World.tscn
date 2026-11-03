@@ -56,10 +56,10 @@ restore_rate = 8.0
 shape = SubResource("rect_sleep")
 
 [node name="Pokemon" parent="." instance=ExtResource("4")]
-position = Vector2(950, 723)
+position = Vector2(980, 545)
 
 [node name="Camera" type="Camera2D" parent="."]
-position = Vector2(950, 723)
+position = Vector2(980, 545)
 limit_left = 0
 limit_top = 0
 limit_right = 1088

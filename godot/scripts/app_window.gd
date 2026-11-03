@@ -27,6 +27,10 @@ func _input(event: InputEvent) -> void:
 		var mb := event as InputEventMouseButton
 		if mb.button_index == MOUSE_BUTTON_RIGHT and mb.pressed:
 			_show_context_menu(mb.global_position)
+		elif mb.button_index == MOUSE_BUTTON_WHEEL_UP and mb.pressed:
+			_zoom_step(0.5)
+		elif mb.button_index == MOUSE_BUTTON_WHEEL_DOWN and mb.pressed:
+			_zoom_step(-0.5)
 		elif mb.button_index == MOUSE_BUTTON_LEFT:
 			if mb.pressed and not _pet_hovered():
 				_dragging   = true
@@ -55,6 +59,15 @@ func _show_context_menu(pos: Vector2) -> void:
 	esc.id_pressed.connect(_on_scale_selected)
 	menu.add_child(esc)
 	menu.add_submenu_item("Escala", "escala")
+	var z := PopupMenu.new()
+	z.name = "zoom"
+	z.add_item("1× (padrão)", 10)
+	z.add_item("2×", 20)
+	z.add_item("3×", 30)
+	z.add_item("4×", 40)
+	z.id_pressed.connect(_on_zoom_selected)
+	menu.add_child(z)
+	menu.add_submenu_item("Zoom (pixels maiores)", "zoom")
 	menu.add_check_item("Sempre no topo", 1)
 	menu.set_item_checked(1, get_window().always_on_top)
 	menu.add_item("Ver status", 2)
@@ -67,6 +80,17 @@ func _show_context_menu(pos: Vector2) -> void:
 
 func _on_scale_selected(id: int) -> void:
 	set_window_scale(id / 10.0)
+
+# Zoom de câmera no World: pixels maiores, janela e viewport do jogo intactos.
+func _on_zoom_selected(id: int) -> void:
+	var world := get_tree().get_first_node_in_group("world")
+	if world:
+		world.zoom_factor = id / 10.0
+
+func _zoom_step(d: float) -> void:
+	var world := get_tree().get_first_node_in_group("world")
+	if world:
+		world.zoom_factor = clampf(world.zoom_factor + d, 1.0, 4.0)
 
 func _on_menu_item(id: int, menu: PopupMenu) -> void:
 	menu.queue_free()

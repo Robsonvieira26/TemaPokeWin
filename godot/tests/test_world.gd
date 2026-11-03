@@ -3,7 +3,7 @@ extends "res://tests/test_base.gd"
 # habitat instanciado, zonas nas marcas do vale e navegação derivada
 # do mapa de colisão embutido na cena (Colisao: Agua/Penhascos/Objetos).
 
-const SPAWN := Vector2(950, 723)  # Spawn do vale_termal.tscn
+const SPAWN := Vector2(980, 545)  # spawn na cabana do vale_termal
 
 func _fresh_world() -> Node:
 	return load("res://scenes/World.tscn").instantiate()

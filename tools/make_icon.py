@@ -1,6 +1,6 @@
 """Gera assets/tamapoke.ico e assets/tamapoke-256.png (somente stdlib).
 
-Fonte: assets/egg-scene-source.png, um quadro 466x466 da cena do ovo desenhada
+Fonte: OLD/assets/egg-scene-source.png, um quadro 466x466 da cena do ovo desenhada
 proceduralmente pelo firmware (MIT), sem sprites de Pokemon. O icone e um recorte
 circular dessa cena, transparente fora do circulo, reduzido por vizinho mais
 proximo para manter o pixel art nitido. Tamanhos pequenos usam um recorte mais
@@ -110,8 +110,8 @@ def build_ico(pngs):
 def main():
     root = pathlib.Path(__file__).resolve().parent.parent
     ap = argparse.ArgumentParser()
-    ap.add_argument("--source", default=str(root / "assets" / "egg-scene-source.png"))
-    ap.add_argument("--out-dir", default=str(root / "assets"))
+    ap.add_argument("--source", default=str(root / "OLD" / "assets" / "egg-scene-source.png"))
+    ap.add_argument("--out-dir", default=str(root / "godot" / "assets"))
     a = ap.parse_args()
     _, _, rows = read_png(pathlib.Path(a.source).read_bytes())
     out = pathlib.Path(a.out_dir)

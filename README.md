@@ -1,9 +1,22 @@
 # TamaPoke para Windows
 
+**Este projeto agora é o desktop pet em Godot.** O jogo vive em `godot/`
+(Charmander autônomo num jardim top-down, tempo real com simulação offline,
+dia/noite, carinho, shell Windows com bandeja). Veja `godot/README` e o plano
+em `docs/superpowers/plans/2026-11-02-godot-sim-mvp.md`; o checklist de
+verificação está em `VERIFICACAO-WINDOWS.md`.
+
+O port nativo C++/SDL (firmware ESP32 + HAL + shell do desktop) está
+**arquivado** na pasta `OLD/` — todo o conteúdo abaixo descreve ele:
+
+---
+
+# Port nativo C++/SDL (ARQUIVADO em `OLD/`)
+
 Port nativo para Windows, no formato *desktop pet*, do firmware ESP32 do
 [TamaPoke](https://github.com/socquique/TamaPoke): um bichinho virtual que vive numa
 janela redonda, sem borda, sempre no topo da tela. O firmware roda sem modificacoes
-(mantido como submodulo em `upstream/`); este projeto fornece a camada de hardware
+(mantido como submodulo em `OLD/upstream/`); este projeto fornece a camada de hardware
 emulada (HAL) e o shell do desktop (janela, bandeja do sistema, console de debug).
 
 Upstream fixado em: `1fff020c158282a384cc9b9357ada111e3eddba8`
@@ -15,16 +28,16 @@ O CMake baixa SDL3 e nlohmann/json sozinho (precisa de internet na primeira conf
 
 ```bash
 git submodule update --init --recursive
-cmake -B build -G "Visual Studio 17 2022" -A x64
+cmake -B OLD/build -S OLD -G "Visual Studio 17 2022" -A x64
 
 # Debug
-cmake --build build --config Debug
+cmake --build OLD/build --config Debug
 # Release (CRT estatico: nao precisa do redistribuivel do VC++)
-cmake --build build --config Release
+cmake --build OLD/build --config Release
 ```
 
-O executavel fica em `build/<Config>/tamapoke.exe`, junto de `SDL3.dll` e da pasta
-`sdcard/` (sprites). Para distribuir, use `tools/package.ps1` (veja "Empacotamento e distribuicao").
+O executavel fica em `OLD/build/<Config>/tamapoke.exe`, junto de `SDL3.dll` e da pasta
+`sdcard/` (sprites). Para distribuir, use `OLD/tools/package.ps1` (veja "Empacotamento e distribuicao").
 
 Testes:
 
@@ -35,7 +48,7 @@ ctest --test-dir build -C Debug --output-on-failure     # ou -C Release
 ## Executar
 
 ```bash
-build\Release\tamapoke.exe
+OLD\build\Release\tamapoke.exe
 ```
 
 Opcoes de linha de comando:
@@ -107,13 +120,13 @@ Para adicionar os sprites: coloque a pasta `mons\` dentro de `sdcard\` ao lado d
 `tamapoke.exe` (ou aponte outra pasta com `--sd-root <pasta>`). Os arquivos (`pNNN.bin`,
 `psNNN.bin` e `thumbs.bin`) sao gerados pelas ferramentas do upstream, a partir do
 PMD SpriteCollab: no repositorio do TamaPoke, `python3 tools/pack_pmd.py` e
-`python3 tools/make_thumbs.py` produzem `tools/sdcard/mons/` (veja a secao "Generate and
-load the sprites yourself" de `upstream/README.md`). Neste repositorio essa pasta ja vem
-no submodulo `upstream/tools/sdcard/mons`, e o build copia para `build/<Config>/sdcard/mons`.
+`python3 OLD/tools/make_thumbs.py` produzem `OLD/upstream/tools/sdcard/mons/` (veja a secao "Generate and
+load the sprites yourself" de `OLD/upstream/README.md`). Neste repositorio essa pasta ja vem
+no submodulo `OLD/upstream/tools/sdcard/mons`, e o build copia para `OLD/build/<Config>/sdcard/mons`.
 
 ### Instalador (Inno Setup)
 
-`installer/tamapoke.iss` (Inno Setup 6) e compilado so no CI de tags `v*` ou onde o Inno
+`OLD/installer/tamapoke.iss` (Inno Setup 6) e compilado so no CI de tags `v*` ou onde o Inno
 Setup estiver instalado (o instalador nao e construido nesta maquina de desenvolvimento):
 
 ```powershell
@@ -133,14 +146,14 @@ nao inclui sprites; o CI so gera artefatos, nunca publica uma Release.
 
 ## Estrutura
 
-- `upstream/`: firmware TamaPoke (submodulo, intocado).
+- `OLD/upstream/`: firmware TamaPoke (submódulo, intocado).
 - `third_party/Arduino_GFX/`: biblioteca grafica real usada pelo firmware (submodulo).
-- `hal/`: emulacao do hardware/Arduino (tela, toque, RTC, SD, audio, preferencias).
-- `src/`: shell do desktop pet; `src/win/` tem bandeja, autostart, instancia unica e console.
-- `assets/`: icone, recursos do Windows (`app.rc`) e a fonte do icone.
-- `tools/`: geradores (`make_icon.py`, `gen_protos.py`, `extract_u8g2_fonts.py`) e `package.ps1`.
-- `installer/`: script do instalador Inno Setup.
-- `tests/`: testes (micro-framework proprio em C++ e `unittest` para os scripts Python).
+- `OLD/hal/`: emulação do hardware/Arduino (tela, toque, RTC, SD, áudio, preferências).
+- `OLD/src/`: shell do desktop pet; `OLD/src/win/` tem bandeja, autostart, instância única e console.
+- `OLD/assets/`: ícone, recursos do Windows (`app.rc`) e a fonte do ícone.
+- `OLD/tools/`: geradores (`gen_protos.py`, `extract_u8g2_fonts.py`) e `package.ps1`; `tools/` na raiz agora só tem o `make_icon.py` (usado pelo Godot).
+- `OLD/installer/`: script do instalador Inno Setup.
+- `OLD/tests/`: testes (micro-framework próprio em C++ e `unittest` para os scripts Python).
 - `docs/`: decisoes, planos e especificacoes.
 
 ## Licencas

@@ -3,7 +3,7 @@ extends "res://tests/test_base.gd"
 func _fresh() -> Node:
 	# Instância direta do script (sem passar pelo autoload): _ready não roda,
 	# então nada toca no save real do usuário.
-	var ps := load("res://scripts/pet_stats.gd").new()
+	var ps: Node = load("res://scripts/pet_stats.gd").new()
 	ps.utc_offset_hours = 0.0
 	ps.save_path = "user://test_save.cfg"
 	return ps
@@ -73,7 +73,7 @@ func test_save_load_roundtrip() -> void:
 	ps.hunger = 55.0
 	ps.save_data()
 	var ps2 := _fresh()
-	var saved_at := ps2.load_data()
+	var saved_at: float = ps2.load_data()
 	assert_eq(ps2.level, 1, "nível persistido")
 	assert_almost(ps2.xp, 40.0, 0.001, "xp persistido")
 	assert_almost(ps2.hunger, 55.0, 0.001, "fome persistida")

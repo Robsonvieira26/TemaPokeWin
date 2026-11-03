@@ -5,7 +5,7 @@ var _failures: PackedStringArray = []
 var _method := ""
 
 func run() -> int:
-	var suite := get_script().resource_path.get_file()
+	var suite: String = get_script().resource_path.get_file()
 	var failed := 0
 	for m in get_method_list():
 		if String(m.name).begins_with("test_"):

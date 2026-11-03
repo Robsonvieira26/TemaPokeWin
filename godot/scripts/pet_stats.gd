@@ -127,8 +127,7 @@ func local_hour_now() -> float:
 func _system_utc_offset() -> float:
 	var local := Time.get_time_dict_from_system()
 	var utc   := Time.get_time_dict_from_system(true)
-	var diff  := (float(local.hour) + local.minute / 60.0)
-		- (float(utc.hour) + utc.minute / 60.0)
+	var diff  := (float(local.hour) + local.minute / 60.0) - (float(utc.hour) + utc.minute / 60.0)
 	return fposmod(diff + 12.0, 24.0) - 12.0
 
 # ── Save ──────────────────────────────────────────────────────────────

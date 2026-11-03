@@ -6,7 +6,7 @@ extends Node
 const BASE_SIZE := Vector2i(480, 480)
 
 var _dragging := false
-var _drag_start: Vector2 = Vector2.ZERO
+var _drag_start := Vector2i.ZERO  # DisplayServer.mouse_get_position() é Vector2i
 var _hidden := false
 var _tray: Object = null  # instância TrayIcon quando a GDExtension existir
 
@@ -37,7 +37,7 @@ func _input(event: InputEvent) -> void:
 		var delta := DisplayServer.mouse_get_position() - _drag_start
 		if delta.length() > 4.0:  # threshold: clique não vira arrasto
 			_drag_start = DisplayServer.mouse_get_position()
-			get_window().position += Vector2i(delta)
+			get_window().position += delta
 
 func _pet_hovered() -> bool:
 	var pet := get_tree().get_first_node_in_group("pet")

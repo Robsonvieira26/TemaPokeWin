@@ -37,6 +37,15 @@ dessa fonte.
 - O `upstream/CREDITS.md` recomenda, ao publicar o projeto, distribuir apenas codigo e
   scripts e deixar cada usuario baixar e empacotar os sprites das fontes originais.
 
+## Cenario Vale Termal (Godot)
+
+O cenario do desktop pet (`godot/assets/sprites/erw/` e os tiles de
+`godot/assets/ERW - Ancient Ruins V 2.3/`) usa o pacote de pixel art
+**ERW - Ancient Ruins V 2.3** como base de tiles e props; os objetos derivados
+(cabana, comedouro, saco de pancada, borboletas, variacoes de vegetacao etc.)
+foram pintados sobre o estilo do pacote no projeto PokePet e seguem a licenca
+do pacote original. Uso pessoal e nao comercial.
+
 ## Bibliotecas
 
 | Componente | Licenca | Fonte da informacao |

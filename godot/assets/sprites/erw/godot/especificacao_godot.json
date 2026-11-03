@@ -1,0 +1,976 @@
+{
+ "versao": 3,
+ "sobre": "Contrato dos assets do Lar do Charmander para o Godot 4.3+. Tudo aqui ja esta aplicado nas cenas godot/lar_do_charmander_*.tscn; este arquivo existe para um agente conferir, regerar ou portar.",
+ "mapa": {
+  "largura_px": 1088,
+  "altura_px": 896,
+  "tile_px": 32,
+  "colunas": 34,
+  "linhas": 28,
+  "cenas": [
+   "godot/lar_do_charmander_aberta.tscn",
+   "godot/lar_do_charmander_densa.tscn"
+  ],
+  "filtro_de_textura": "Nearest",
+  "escala": "somente inteira (1x, 2x, 3x...)"
+ },
+ "camadas_fisicas": {
+  "1": {
+   "bit": 1,
+   "nome": "solidos",
+   "conteudo": "penhascos e base dos objetos"
+  },
+  "2": {
+   "bit": 2,
+   "nome": "agua",
+   "conteudo": "o rio, menos as pontes"
+  },
+  "4": {
+   "bit": 8,
+   "nome": "interacoes",
+   "conteudo": "Area2D dos pontos de interacao"
+  }
+ },
+ "colisao": {
+  "onde": "no 'Colisao' da cena; as formas vem da camada de objetos 'colisao' do .tmx",
+  "gerado_por": "collision.py a cada build - nao editar a mao no Tiled",
+  "corpos": [
+   {
+    "no": "Colisao/Agua",
+    "tipo_tiled": "agua",
+    "classe": "StaticBody2D",
+    "collision_layer": 2,
+    "collision_mask": 0,
+    "forma": "CollisionPolygon2D",
+    "conteudo": "o rio inteiro, menos as duas pontes"
+   },
+   {
+    "no": "Colisao/Penhascos",
+    "tipo_tiled": "penhasco",
+    "classe": "StaticBody2D",
+    "collision_layer": 1,
+    "collision_mask": 0,
+    "forma": "CollisionPolygon2D",
+    "conteudo": "paredes de pedra do plato e da cachoeira, com um vao aberto na escada de pedra"
+   },
+   {
+    "no": "Colisao/Objetos",
+    "tipo_tiled": "objeto",
+    "classe": "StaticBody2D",
+    "collision_layer": 1,
+    "collision_mask": 0,
+    "forma": "CollisionPolygon2D",
+    "conteudo": "base (so o pe) de arvores, casa, pedras, tocos, troncos, fogueira, treino, cestas, bebedouro"
+   }
+  ],
+  "pokemon": {
+   "classe": "CharacterBody2D",
+   "collision_layer": 4,
+   "collision_mask": 3,
+   "observacao": "mask 3 = solidos + agua; use 1 se ele puder nadar"
+  },
+  "sem_colisao": [
+   "grama",
+   "flores",
+   "arbustos",
+   "capim",
+   "cogumelos",
+   "samambaias",
+   "tremocos",
+   "vitorias-regias",
+   "pedrinhas",
+   "tapete",
+   "cama",
+   "bola",
+   "monte de folhas",
+   "rocks_0..rocks_11",
+   "ponte_de_tabuas",
+   "escada_de_pedra",
+   "pedra_no_rio"
+  ],
+  "por_sprite": {
+   "alvo_de_palha": {
+    "acima_do_pe": 3,
+    "altura": 8,
+    "forma": "retangulo",
+    "largura": 24
+   },
+   "arvore_oran": {
+    "acima_do_pe": 3,
+    "altura": 8,
+    "forma": "elipse",
+    "largura": 12
+   },
+   "bebedouro": {
+    "acima_do_pe": 4,
+    "altura": 8,
+    "forma": "retangulo",
+    "largura": 34
+   },
+   "birch trees": {
+    "acima_do_pe": 3,
+    "altura": 8,
+    "forma": "elipse",
+    "largura": 12
+   },
+   "boneco_de_madeira": {
+    "acima_do_pe": 3,
+    "altura": 8,
+    "forma": "elipse",
+    "largura": 14
+   },
+   "brinquedo_pendurado": {
+    "acima_do_pe": 2,
+    "altura": 6,
+    "forma": "retangulo",
+    "largura": 36
+   },
+   "cata_vento": {
+    "acima_do_pe": 1,
+    "altura": 4,
+    "forma": "elipse",
+    "largura": 6
+   },
+   "cesta_macas": {
+    "acima_do_pe": 3,
+    "altura": 6,
+    "forma": "retangulo",
+    "largura": 20
+   },
+   "cesta_oran": {
+    "acima_do_pe": 3,
+    "altura": 6,
+    "forma": "retangulo",
+    "largura": 20
+   },
+   "cesta_pecha": {
+    "acima_do_pe": 3,
+    "altura": 6,
+    "forma": "retangulo",
+    "largura": 20
+   },
+   "estatua_lendaria": {
+    "acima_do_pe": 9,
+    "altura": 18,
+    "forma": "retangulo",
+    "largura": 58
+   },
+   "fogueira": {
+    "acima_do_pe": 5,
+    "altura": 12,
+    "forma": "elipse",
+    "largura": 26
+   },
+   "generic structure": {
+    "acima_do_pe": 15,
+    "altura": 30,
+    "forma": "retangulo",
+    "largura": 84
+   },
+   "lanterna": {
+    "acima_do_pe": 1,
+    "altura": 4,
+    "forma": "elipse",
+    "largura": 6
+   },
+   "laranjeira": {
+    "acima_do_pe": 4,
+    "altura": 10,
+    "forma": "elipse",
+    "largura": 18
+   },
+   "macieira": {
+    "acima_do_pe": 4,
+    "altura": 10,
+    "forma": "elipse",
+    "largura": 18
+   },
+   "pilha_de_lenha": {
+    "acima_do_pe": 5,
+    "altura": 10,
+    "forma": "retangulo",
+    "largura": 30
+   },
+   "placa_chama": {
+    "acima_do_pe": 1,
+    "altura": 4,
+    "forma": "elipse",
+    "largura": 6
+   },
+   "rocks": {
+    "acima_do_pe": 8,
+    "altura": 16,
+    "forma": "elipse",
+    "largura": 33
+   },
+   "saco_de_pancada": {
+    "acima_do_pe": 3,
+    "altura": 8,
+    "forma": "retangulo",
+    "largura": 30
+   },
+   "shrubs": {
+    "acima_do_pe": 2,
+    "altura": 6,
+    "forma": "elipse",
+    "largura": 10
+   },
+   "toco_capim": {
+    "acima_do_pe": 5,
+    "altura": 12,
+    "forma": "elipse",
+    "largura": 24
+   },
+   "toco_claro": {
+    "acima_do_pe": 5,
+    "altura": 12,
+    "forma": "elipse",
+    "largura": 24
+   },
+   "toco_escuro_musgo_capim": {
+    "acima_do_pe": 5,
+    "altura": 12,
+    "forma": "elipse",
+    "largura": 24
+   },
+   "toco_mesa_frutinhas": {
+    "acima_do_pe": 5,
+    "altura": 12,
+    "forma": "elipse",
+    "largura": 24
+   },
+   "toco_mesa_frutinhas_musgo": {
+    "acima_do_pe": 5,
+    "altura": 12,
+    "forma": "elipse",
+    "largura": 24
+   },
+   "toco_musgo": {
+    "acima_do_pe": 5,
+    "altura": 12,
+    "forma": "elipse",
+    "largura": 24
+   },
+   "toras_para_quebrar": {
+    "acima_do_pe": 5,
+    "altura": 10,
+    "forma": "retangulo",
+    "largura": 27
+   },
+   "trees": {
+    "acima_do_pe": 4,
+    "altura": 10,
+    "forma": "elipse",
+    "largura": 18
+   },
+   "tronco_banco": {
+    "acima_do_pe": 5,
+    "altura": 10,
+    "forma": "retangulo",
+    "largura": 28
+   },
+   "tronco_oco": {
+    "acima_do_pe": 5,
+    "altura": 10,
+    "forma": "retangulo",
+    "largura": 37
+   },
+   "var_arvore_carmim": {
+    "acima_do_pe": 4,
+    "altura": 10,
+    "forma": "elipse",
+    "largura": 18
+   },
+   "var_arvore_jovem": {
+    "acima_do_pe": 2,
+    "altura": 6,
+    "forma": "elipse",
+    "largura": 8
+   },
+   "var_arvore_jovem_verde": {
+    "acima_do_pe": 2,
+    "altura": 6,
+    "forma": "elipse",
+    "largura": 8
+   },
+   "var_arvore_verde": {
+    "acima_do_pe": 4,
+    "altura": 10,
+    "forma": "elipse",
+    "largura": 18
+   },
+   "var_arvore_verde_escuro": {
+    "acima_do_pe": 4,
+    "altura": 10,
+    "forma": "elipse",
+    "largura": 18
+   },
+   "var_conifera": {
+    "acima_do_pe": 2,
+    "altura": 6,
+    "forma": "elipse",
+    "largura": 10
+   },
+   "var_pedra_arenito": {
+    "acima_do_pe": 6,
+    "altura": 12,
+    "forma": "elipse",
+    "largura": 49
+   },
+   "var_pedra_granito": {
+    "acima_do_pe": 6,
+    "altura": 13,
+    "forma": "elipse",
+    "largura": 40
+   },
+   "var_pedra_musgo": {
+    "acima_do_pe": 5,
+    "altura": 12,
+    "forma": "elipse",
+    "largura": 37
+   },
+   "var_pedra_rio": {
+    "acima_do_pe": 5,
+    "altura": 12,
+    "forma": "elipse",
+    "largura": 37
+   },
+   "var_pilha_pedras": {
+    "acima_do_pe": 6,
+    "altura": 12,
+    "forma": "elipse",
+    "largura": 14
+   },
+   "var_ruina_granito": {
+    "acima_do_pe": 8,
+    "altura": 16,
+    "forma": "retangulo",
+    "largura": 42
+   },
+   "var_toco_cogumelos": {
+    "acima_do_pe": 5,
+    "altura": 12,
+    "forma": "elipse",
+    "largura": 24
+   },
+   "var_toco_machado": {
+    "acima_do_pe": 5,
+    "altura": 12,
+    "forma": "elipse",
+    "largura": 24
+   },
+   "var_toco_musgo": {
+    "acima_do_pe": 5,
+    "altura": 12,
+    "forma": "elipse",
+    "largura": 24
+   },
+   "var_tronco_caido_musgo": {
+    "acima_do_pe": 5,
+    "altura": 10,
+    "forma": "retangulo",
+    "largura": 56
+   },
+   "vaso_flores": {
+    "acima_do_pe": 2,
+    "altura": 5,
+    "forma": "retangulo",
+    "largura": 10
+   }
+  },
+  "por_sprite_formato": "nome base do sprite -> forma (elipse|retangulo), largura, altura, acima_do_pe (px acima do pe do sprite onde a forma fica centrada)"
+ },
+ "animacoes": {
+  "classe": "AnimatedSprite2D com SpriteFrames, autoplay 'default', loop ligado",
+  "quadros": {
+   "abelha": {
+    "quadros": 2,
+    "fps": 16.667,
+    "ms_por_quadro": 60.0,
+    "pasta": "sprites/animados/abelha/",
+    "arquivos": [
+     "abelha_0.png",
+     "abelha_1.png"
+    ]
+   },
+   "borboleta_amarela": {
+    "quadros": 2,
+    "fps": 7.143,
+    "ms_por_quadro": 140.0,
+    "pasta": "sprites/animados/borboleta_amarela/",
+    "arquivos": [
+     "borboleta_amarela_0.png",
+     "borboleta_amarela_1.png"
+    ]
+   },
+   "borboleta_azul": {
+    "quadros": 2,
+    "fps": 7.143,
+    "ms_por_quadro": 140.0,
+    "pasta": "sprites/animados/borboleta_azul/",
+    "arquivos": [
+     "borboleta_azul_0.png",
+     "borboleta_azul_1.png"
+    ]
+   },
+   "borboleta_branca": {
+    "quadros": 2,
+    "fps": 7.143,
+    "ms_por_quadro": 140.0,
+    "pasta": "sprites/animados/borboleta_branca/",
+    "arquivos": [
+     "borboleta_branca_0.png",
+     "borboleta_branca_1.png"
+    ]
+   },
+   "borboleta_laranja": {
+    "quadros": 2,
+    "fps": 7.143,
+    "ms_por_quadro": 140.0,
+    "pasta": "sprites/animados/borboleta_laranja/",
+    "arquivos": [
+     "borboleta_laranja_0.png",
+     "borboleta_laranja_1.png"
+    ]
+   },
+   "brinquedo_pendurado": {
+    "quadros": 8,
+    "fps": 8.333,
+    "ms_por_quadro": 120.0,
+    "pasta": "sprites/animados/brinquedo_pendurado/",
+    "arquivos": [
+     "brinquedo_pendurado_0.png",
+     "brinquedo_pendurado_1.png",
+     "brinquedo_pendurado_2.png",
+     "brinquedo_pendurado_3.png",
+     "brinquedo_pendurado_4.png",
+     "brinquedo_pendurado_5.png",
+     "brinquedo_pendurado_6.png",
+     "brinquedo_pendurado_7.png"
+    ]
+   },
+   "cata_vento": {
+    "quadros": 4,
+    "fps": 11.111,
+    "ms_por_quadro": 90.0,
+    "pasta": "sprites/animados/cata_vento/",
+    "arquivos": [
+     "cata_vento_0.png",
+     "cata_vento_1.png",
+     "cata_vento_2.png",
+     "cata_vento_3.png"
+    ]
+   },
+   "estatua_lendaria": {
+    "quadros": 24,
+    "fps": 8.333,
+    "ms_por_quadro": 120.0,
+    "pasta": "sprites/animados/estatua_lendaria/",
+    "arquivos": [
+     "estatua_lendaria_00.png",
+     "estatua_lendaria_01.png",
+     "estatua_lendaria_02.png",
+     "estatua_lendaria_03.png",
+     "estatua_lendaria_04.png",
+     "estatua_lendaria_05.png",
+     "estatua_lendaria_06.png",
+     "estatua_lendaria_07.png",
+     "estatua_lendaria_08.png",
+     "estatua_lendaria_09.png",
+     "estatua_lendaria_10.png",
+     "estatua_lendaria_11.png",
+     "estatua_lendaria_12.png",
+     "estatua_lendaria_13.png",
+     "estatua_lendaria_14.png",
+     "estatua_lendaria_15.png",
+     "estatua_lendaria_16.png",
+     "estatua_lendaria_17.png",
+     "estatua_lendaria_18.png",
+     "estatua_lendaria_19.png",
+     "estatua_lendaria_20.png",
+     "estatua_lendaria_21.png",
+     "estatua_lendaria_22.png",
+     "estatua_lendaria_23.png"
+    ]
+   },
+   "fogueira": {
+    "quadros": 4,
+    "fps": 6.667,
+    "ms_por_quadro": 150.0,
+    "pasta": "sprites/animados/fogueira/",
+    "arquivos": [
+     "fogueira_0.png",
+     "fogueira_1.png",
+     "fogueira_2.png",
+     "fogueira_3.png"
+    ]
+   },
+   "lanterna": {
+    "quadros": 4,
+    "fps": 5,
+    "ms_por_quadro": 200.0,
+    "pasta": "sprites/animados/lanterna/",
+    "arquivos": [
+     "lanterna_0.png",
+     "lanterna_1.png",
+     "lanterna_2.png",
+     "lanterna_3.png"
+    ]
+   },
+   "pedra_no_rio": {
+    "quadros": 4,
+    "fps": 5.0,
+    "ms_por_quadro": 200.0,
+    "pasta": "sprites/animados/pedra_no_rio/",
+    "arquivos": [
+     "pedra_no_rio_0.png",
+     "pedra_no_rio_1.png",
+     "pedra_no_rio_2.png",
+     "pedra_no_rio_3.png"
+    ]
+   },
+   "saco_de_pancada": {
+    "quadros": 16,
+    "fps": 10,
+    "ms_por_quadro": 100.0,
+    "pasta": "sprites/animados/saco_de_pancada/",
+    "arquivos": [
+     "saco_de_pancada_00.png",
+     "saco_de_pancada_01.png",
+     "saco_de_pancada_02.png",
+     "saco_de_pancada_03.png",
+     "saco_de_pancada_04.png",
+     "saco_de_pancada_05.png",
+     "saco_de_pancada_06.png",
+     "saco_de_pancada_07.png",
+     "saco_de_pancada_08.png",
+     "saco_de_pancada_09.png",
+     "saco_de_pancada_10.png",
+     "saco_de_pancada_11.png",
+     "saco_de_pancada_12.png",
+     "saco_de_pancada_13.png",
+     "saco_de_pancada_14.png",
+     "saco_de_pancada_15.png"
+    ]
+   }
+  },
+  "alvo_de_palha": {
+   "tipo": "maquina de estados, nao loop unico",
+   "estados": {
+    "normal": [
+     "alvo_de_palha.png"
+    ],
+    "em_chamas": [
+     "alvo_de_palha_em_chamas_0.png",
+     "alvo_de_palha_em_chamas_1.png",
+     "alvo_de_palha_em_chamas_2.png",
+     "alvo_de_palha_em_chamas_3.png"
+    ],
+    "fumegando": [
+     "alvo_de_palha_fumegando_0.png",
+     "alvo_de_palha_fumegando_1.png",
+     "alvo_de_palha_fumegando_2.png",
+     "alvo_de_palha_fumegando_3.png"
+    ],
+    "chamuscado": [
+     "alvo_de_palha_chamuscado.png"
+    ],
+    "queimado": [
+     "alvo_de_palha_queimado.png"
+    ]
+   },
+   "fluxo": "normal -> em_chamas (enquanto queima) -> fumegando -> chamuscado -> queimado",
+   "script": "godot/alvo.gd"
+  },
+  "estatua_lendaria": {
+   "slot": {
+    "largura": 84,
+    "altura": 96,
+    "pe_x": 140,
+    "pe_y": 212,
+    "estado": "vazio - o usuario coloca a propria arte licenciada",
+    "como_preencher": "tiled/preparar_estatua.py recorta a folha em estatua_lendaria_00..23.png"
+   },
+   "regra_de_animacao": {
+    "parada": "quadro 00 (pose de pedra) - e o estado normal",
+    "chance_padrao": 0.01,
+    "chance_pokemon_perto": 0.1,
+    "raio_perto_px": 64,
+    "intervalo_de_sorteio_s": 2.0,
+    "explicacao": "a cada sorteio, se o Pokemon estiver a 64 px ou menos a chance do sprite iluminado e de 10%; fora disso e de 1%. Em qualquer outro momento a estatua fica parada."
+   }
+  }
+ },
+ "interacoes": {
+  "onde": "no 'Interacoes' da cena; cada ponto e um Area2D",
+  "collision_layer": 8,
+  "collision_mask": 0,
+  "monitoring": false,
+  "metadados": [
+   "tipo",
+   "fonte",
+   "sobre",
+   "raio"
+  ],
+  "como_consultar": "PhysicsShapeQueryParameters2D com collision_mask = 8, collide_with_areas = true, collide_with_bodies = false",
+  "tipos": {
+   "abrigo": "entrada da cabana: abrigo quando chove ou escurece",
+   "aquecer": "fogueira: calor e luz a noite",
+   "atravessar": "cabeceira de ponte: passagem entre as margens",
+   "beber": "agua limpa para beber",
+   "brincar": "brinquedos, folhas e insetos para perseguir",
+   "comer": "fonte de comida: frutinhas, cestas e arvores frutiferas",
+   "descansar": "lugar para sentar e descansar",
+   "dormir": "lugar para dormir, protegido da chuva",
+   "explorar": "ponto de interesse para investigar",
+   "treinar": "equipamento de treino na clareira de pedra"
+  },
+  "pontos": {
+   "abrigo": [
+    {
+     "nome": "tapete_entrada",
+     "raio": 14,
+     "x": 992,
+     "y": 638
+    },
+    {
+     "nome": "porta_da_cabana",
+     "raio": 16,
+     "x": 992,
+     "y": 640
+    }
+   ],
+   "aquecer": [
+    {
+     "nome": "fogueira",
+     "raio": 20,
+     "x": 990,
+     "y": 710
+    }
+   ],
+   "atravessar": [
+    {
+     "nome": "ponte_de_tabuas",
+     "raio": 22,
+     "x": 539,
+     "y": 858
+    },
+    {
+     "nome": "ponte_de_tabuas_norte",
+     "raio": 22,
+     "x": 555,
+     "y": 92
+    }
+   ],
+   "beber": [
+    {
+     "nome": "bebedouro",
+     "raio": 14,
+     "x": 862,
+     "y": 724
+    },
+    {
+     "nome": "beira_do_rio_norte",
+     "raio": 14,
+     "x": 596,
+     "y": 196
+    },
+    {
+     "nome": "beira_do_rio_central",
+     "raio": 14,
+     "x": 452,
+     "y": 556
+    },
+    {
+     "nome": "beira_do_rio_sul",
+     "raio": 14,
+     "x": 660,
+     "y": 760
+    },
+    {
+     "nome": "beira_do_rio_oeste",
+     "raio": 14,
+     "x": 404,
+     "y": 700
+    }
+   ],
+   "brincar": [
+    {
+     "nome": "brinquedo_pendurado",
+     "raio": 15,
+     "x": 118,
+     "y": 664
+    },
+    {
+     "nome": "monte_de_folhas",
+     "raio": 15,
+     "x": 214,
+     "y": 709
+    },
+    {
+     "nome": "tronco_oco",
+     "raio": 15,
+     "x": 102,
+     "y": 741
+    },
+    {
+     "nome": "bola_de_couro",
+     "raio": 15,
+     "x": 176,
+     "y": 681
+    },
+    {
+     "nome": "cata_vento",
+     "raio": 15,
+     "x": 246,
+     "y": 662
+    },
+    {
+     "nome": "cata_vento",
+     "raio": 15,
+     "x": 70,
+     "y": 702
+    },
+    {
+     "nome": "area_de_brincar",
+     "raio": 34,
+     "x": 165,
+     "y": 690
+    }
+   ],
+   "comer": [
+    {
+     "nome": "toco_mesa_frutinhas",
+     "raio": 20,
+     "x": 826,
+     "y": 678
+    },
+    {
+     "nome": "cesta_macas",
+     "raio": 12,
+     "x": 794,
+     "y": 687
+    },
+    {
+     "nome": "cesta_oran",
+     "raio": 12,
+     "x": 858,
+     "y": 691
+    },
+    {
+     "nome": "cesta_pecha",
+     "raio": 12,
+     "x": 806,
+     "y": 707
+    },
+    {
+     "nome": "arbusto_frutinhas",
+     "raio": 14,
+     "x": 760,
+     "y": 648
+    },
+    {
+     "nome": "arbusto_frutinhas",
+     "raio": 14,
+     "x": 884,
+     "y": 642
+    },
+    {
+     "nome": "arbusto_frutinhas",
+     "raio": 14,
+     "x": 752,
+     "y": 716
+    },
+    {
+     "nome": "arbusto_frutinhas",
+     "raio": 14,
+     "x": 905,
+     "y": 676
+    },
+    {
+     "nome": "macieira",
+     "raio": 16,
+     "x": 52,
+     "y": 346
+    },
+    {
+     "nome": "macas_no_chao",
+     "raio": 11,
+     "x": 78,
+     "y": 353
+    },
+    {
+     "nome": "arbusto_frutinhas",
+     "raio": 14,
+     "x": 30,
+     "y": 412
+    },
+    {
+     "nome": "cesta_macas",
+     "raio": 12,
+     "x": 84,
+     "y": 411
+    },
+    {
+     "nome": "laranjeira",
+     "raio": 16,
+     "x": 1010,
+     "y": 162
+    },
+    {
+     "nome": "laranjas_no_chao",
+     "raio": 11,
+     "x": 1032,
+     "y": 171
+    },
+    {
+     "nome": "arbusto_frutinhas",
+     "raio": 14,
+     "x": 952,
+     "y": 198
+    },
+    {
+     "nome": "toco_mesa_frutinhas_musgo",
+     "raio": 20,
+     "x": 992,
+     "y": 224
+    },
+    {
+     "nome": "arvore_oran",
+     "raio": 16,
+     "x": 292,
+     "y": 818
+    },
+    {
+     "nome": "oran_no_chao",
+     "raio": 11,
+     "x": 312,
+     "y": 825
+    },
+    {
+     "nome": "cesta_oran",
+     "raio": 12,
+     "x": 220,
+     "y": 825
+    },
+    {
+     "nome": "comedouro_principal",
+     "raio": 26,
+     "x": 836,
+     "y": 700
+    }
+   ],
+   "descansar": [
+    {
+     "nome": "tronco_banco",
+     "raio": 13,
+     "x": 950,
+     "y": 723
+    },
+    {
+     "nome": "toco_claro",
+     "raio": 13,
+     "x": 1032,
+     "y": 715
+    }
+   ],
+   "dormir": [
+    {
+     "nome": "cama_aconchegante",
+     "raio": 13,
+     "x": 1050,
+     "y": 656
+    }
+   ],
+   "explorar": [
+    {
+     "nome": "var_ruina_granito",
+     "raio": 18,
+     "x": 40,
+     "y": 160
+    },
+    {
+     "nome": "var_ruina_granito",
+     "raio": 18,
+     "x": 250,
+     "y": 160
+    },
+    {
+     "nome": "var_ruina_granito",
+     "raio": 18,
+     "x": 1040,
+     "y": 310
+    },
+    {
+     "nome": "estatua_lendaria",
+     "raio": 18,
+     "x": 140,
+     "y": 222
+    }
+   ],
+   "treinar": [
+    {
+     "nome": "saco_de_pancada",
+     "raio": 17,
+     "x": 840,
+     "y": 830
+    },
+    {
+     "nome": "boneco_de_madeira",
+     "raio": 17,
+     "x": 914,
+     "y": 812
+    },
+    {
+     "nome": "boneco_de_madeira",
+     "raio": 17,
+     "x": 978,
+     "y": 848
+    },
+    {
+     "nome": "alvo_de_palha",
+     "raio": 17,
+     "x": 1012,
+     "y": 790
+    },
+    {
+     "nome": "toras_para_quebrar",
+     "raio": 15,
+     "x": 880,
+     "y": 877
+    },
+    {
+     "nome": "clareira_de_treino",
+     "raio": 30,
+     "x": 912,
+     "y": 826
+    }
+   ]
+  }
+ },
+ "vento": {
+  "shader": "godot/vento.gdshader",
+  "aplicacao": "ShaderMaterial no Sprite2D da planta",
+  "parametros_por_tipo": {
+   "tree": {
+    "amplitude_px": 1.8,
+    "rigidez": 1.4,
+    "frequencia": 0.5,
+    "atraso_topo": 0.35
+   },
+   "bush": {
+    "amplitude_px": 1.0,
+    "rigidez": 1.2,
+    "frequencia": 0.8,
+    "atraso_topo": 0.18
+   },
+   "grass": {
+    "amplitude_px": 1.6,
+    "rigidez": 1.0,
+    "frequencia": 1.2,
+    "atraso_topo": 0.08
+   }
+  },
+  "regra": "so desloca pixels inteiros na horizontal, mais no topo; nunca em props solidos (casa, ponte, escada, estatua)"
+ }
+}

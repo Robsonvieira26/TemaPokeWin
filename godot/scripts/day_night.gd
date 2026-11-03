@@ -20,6 +20,7 @@ static func tint_for_hour(hour: float) -> Color:
 	return COL_NIGHT.lerp(COL_DAY, hour - 7.0)  # 7h–8h: amanhecer
 
 func _process(_delta: float) -> void:
+	# Valores de Dictionary são Variant: converte para float explicitamente.
 	var t := Time.get_time_dict_from_system()
-	var hour := float(t.hour) + t.minute / 60.0
+	var hour: float = float(t.hour) + float(t.minute) / 60.0
 	modulate = tint_for_hour(hour)

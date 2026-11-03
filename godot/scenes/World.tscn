@@ -55,11 +55,11 @@ restore_rate = 8.0
 [node name="SleepShape" type="CollisionShape2D" parent="SleepZone"]
 shape = SubResource("rect_sleep")
 
-[node name="Pokemon" parent="." instance=ExtResource("4")]
-position = Vector2(980, 545)
+[node name="Pokemon" parent="Habitat" instance=ExtResource("4")]
+position = Vector2(992, 638)
 
 [node name="Camera" type="Camera2D" parent="."]
-position = Vector2(980, 545)
+position = Vector2(992, 638)
 limit_left = 0
 limit_top = 0
 limit_right = 1088

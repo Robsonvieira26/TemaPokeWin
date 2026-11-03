@@ -6,7 +6,7 @@ extends "res://tests/test_base.gd"
 # que dependem do World ficam guardados — o comportamento real de jogo é
 # exercitado pelos testes do World e na verificação manual.
 
-const SPAWN := Vector2(980, 545)
+const SPAWN := Vector2(992, 638)  # tapete da porta da cabana
 
 func _fresh() -> CharacterBody2D:
 	# Cena (não script .new()): o controller precisa de $NavAgent/$Visual/$PetArea.

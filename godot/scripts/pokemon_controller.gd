@@ -8,11 +8,15 @@ enum State { WANDER, IDLE, ACTIVITY, SEEK }
 const WALK_SPEED := 60.0
 const HUNGER_LOW := 30.0   # fome abaixo disso → busca comida
 const ENERGY_LOW := 20.0   # energia abaixo disso → busca a cama
+const STUCK_SECONDS := 5.0  # preso tentando chegar a um lugar → faz outro caminho
 
 var state:       State = State.WANDER
 var state_timer: float = 0.0
 var active_zone: Node  = null
 var _seek_zone:  Node  = null
+var _stuck_for:   float   = 0.0    # segundos sem progresso rumo ao destino
+var _stuck_check: float    = 0.0   # relógio da amostragem de progresso
+var _stuck_pos:   Vector2  = Vector2.ZERO
 var _facing:     int   = PmdSpriteLoader.DIR_SOUTH
 var _species_id: String = "0004"
 var _last_level: int    = 1
@@ -44,7 +48,11 @@ func _physics_process(delta: float) -> void:
 		State.SEEK:     _do_seek()
 
 func _world() -> Node:
-	return get_tree().get_first_node_in_group("world")
+	# get_tree() pode ser null fora da árvore (teardown ou harness headless).
+	var tree := get_tree()
+	if tree == null:
+		return null
+	return tree.get_first_node_in_group("world")
 
 func _do_wander() -> void:
 	if _navigate():
@@ -95,7 +103,37 @@ func _navigate() -> bool:
 	move_and_slide()
 	_face(velocity)
 	_play_anim("Walk%d" % _facing)
+	_track_stuck(get_physics_process_delta_time())
 	return false
+
+# Progresso rumo ao destino, amostrado a cada 0,5 s (a WALK_SPEED, andar
+# desloca ~30 px por amostra; ficar preso, quase nada). 5 s parados → desvia.
+func _track_stuck(delta: float) -> void:
+	_stuck_check -= delta
+	if _stuck_check > 0.0:
+		return
+	_stuck_check = 0.5
+	if global_position.distance_to(_stuck_pos) < 4.0:
+		_stuck_for += 0.5
+		if _stuck_for >= STUCK_SECONDS:
+			_reroute()
+	else:
+		_stuck_for = 0.0
+	_stuck_pos = global_position
+
+# "Fazer outro caminho": em busca de zona, abandona o destino e passa a andar
+# até um ponto aleatório (o IDLE retoma a busca se a necessidade persistir);
+# no passeio, escolhe outro ponto.
+func _reroute() -> void:
+	_stuck_for   = 0.0
+	_stuck_check = 0.0
+	_stuck_pos   = global_position
+	if state == State.SEEK:
+		_set_state(State.WANDER)
+	else:
+		var w := _world()
+		if w:
+			nav.target_position = w.random_wander_point()
 
 func _check_need() -> String:
 	if PetStats.hunger < HUNGER_LOW:
@@ -118,6 +156,8 @@ func _start_seek(zone_name: String) -> void:
 func _set_state(new_state: State) -> void:
 	state = new_state
 	PetStats.asleep = false
+	_stuck_for = 0.0  # destino novo, contagem de travamento zerada
+	_stuck_pos = global_position
 	match new_state:
 		State.WANDER:
 			state_timer = 10.0

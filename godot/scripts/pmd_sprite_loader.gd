@@ -4,9 +4,9 @@ class_name PmdSpriteLoader
 # Layout da sheet: 8 linhas (direções) × N colunas (frames da animação).
 # Direções: South=0, SE=1, East=2, NE=3, North=4, NW=5, West=6, SW=7
 #
-# Para um pet 2D lateral usamos:
-#   East (linha 2) → Walk, virado para a direita; flip horizontal para esquerda.
-#   South (linha 0) → Idle, Eat, Sleep; de frente para o usuário.
+# Cada sheet é um grid: linha = direção (0=South, sentido horário até 7=SW).
+# ANIM_DATA abaixo mapeia espécie → specs de animação ("dir" linha única ou
+# "dirs" todas as 8, criando "<Nome><linha>").
 #
 # ─────────────────────────────────────────────────────────────────────
 # FUTURO – alternativa PokeSprite (pokesprite.veekun.com / github.com/msikma/pokesprite):
@@ -21,32 +21,43 @@ class_name PmdSpriteLoader
 
 const TICK_RATE := 30.0
 
+# Layout SkyTemple: linha 0 = South (de frente para baixo), cresce no sentido
+# horário: 1=SE, 2=East, 3=NE, 4=North, 5=NW, 6=West, 7=SW.
 const DIR_SOUTH := 0
-const DIR_EAST  := 2
+const ALL_DIRS := [0, 1, 2, 3, 4, 5, 6, 7]
 
 # Dados MVP das animações por espécie.
-# "w"/"h": tamanho de um frame (px). "d": durações em ticks 30fps. "dir": linha de direção.
-# null = animação não disponível → controller deve fazer fallback.
+# "w"/"h": frame (px). "d": durações em ticks 30fps.
+# "dir": linha única (animações de frente). "dirs": cria "<Nome><linha>" por direção.
+# null = animação indisponível → controller faz fallback.
 const ANIM_DATA: Dictionary = {
 	"0004": {  # Charmander
-		"Idle":  { "w": 32, "h": 40, "d": [12, 8, 8, 8],    "dir": DIR_SOUTH },
-		"Walk":  { "w": 32, "h": 32, "d": [6,  8, 6, 8],    "dir": DIR_EAST  },
-		"Sleep": { "w": 32, "h": 24, "d": [30, 35],          "dir": DIR_SOUTH },
-		"Eat":   { "w": 24, "h": 32, "d": [6,  8, 6, 8],    "dir": DIR_SOUTH },
+		"Idle":  { "w": 32, "h": 40, "d": [12, 8, 8, 8], "dir": DIR_SOUTH },
+		"Walk":  { "w": 32, "h": 32, "d": [6, 8, 6, 8],  "dirs": ALL_DIRS },
+		"Sleep": { "w": 32, "h": 24, "d": [30, 35],      "dir": DIR_SOUTH },
+		"Eat":   { "w": 24, "h": 32, "d": [6, 8, 6, 8],  "dir": DIR_SOUTH },
 	},
 	"0005": {  # Charmeleon
 		"Idle":  { "w": 32, "h": 56, "d": [40, 2, 3, 3, 3, 2], "dir": DIR_SOUTH },
-		"Walk":  { "w": 24, "h": 32, "d": [8,  10, 8, 10],     "dir": DIR_EAST  },
-		"Sleep": { "w": 24, "h": 32, "d": [30, 35],              "dir": DIR_SOUTH },
-		"Eat":   { "w": 24, "h": 32, "d": [6,  8,  6,  8],     "dir": DIR_SOUTH },
+		"Walk":  { "w": 24, "h": 32, "d": [8, 10, 8, 10],      "dirs": ALL_DIRS },
+		"Sleep": { "w": 24, "h": 32, "d": [30, 35],            "dir": DIR_SOUTH },
+		"Eat":   { "w": 24, "h": 32, "d": [6, 8, 6, 8],        "dir": DIR_SOUTH },
 	},
 	"0006": {  # Charizard
 		"Idle":  { "w": 40, "h": 48, "d": [15, 15, 15, 15], "dir": DIR_SOUTH },
-		"Walk":  { "w": 40, "h": 48, "d": [8,  10, 8,  10], "dir": DIR_EAST  },
-		"Sleep": { "w": 32, "h": 48, "d": [30, 35],          "dir": DIR_SOUTH },
+		"Walk":  { "w": 40, "h": 48, "d": [8, 10, 8, 10],   "dirs": ALL_DIRS },
+		"Sleep": { "w": 32, "h": 48, "d": [30, 35],         "dir": DIR_SOUTH },
 		"Eat":   null,  # indisponível no PMD Collab — controller usa Idle como fallback
 	},
 }
+
+# Velocidade → direção SkyTemple. angle() em GDScript: 0 = Leste, +90 = Sul
+# (y cresce para baixo). A linha cresce no sentido horário a partir do Sul.
+static func direction_for_velocity(v: Vector2) -> int:
+	if v.length_squared() < 0.0001:
+		return DIR_SOUTH
+	var a := rad_to_deg(v.angle())
+	return wrapi(roundi((90.0 - a) / 45.0), 0, 8)
 
 static func load_pokemon_frames(species_id: String) -> SpriteFrames:
 	var data: Dictionary = ANIM_DATA.get(species_id, {})
@@ -67,7 +78,11 @@ static func load_pokemon_frames(species_id: String) -> SpriteFrames:
 		if tex == null:
 			push_warning("PmdSpriteLoader: arquivo não encontrado: %s" % path)
 			continue
-		_add_anim(frames, anim_name, tex, spec)
+		if spec.has("dirs"):
+			for row: int in spec["dirs"]:
+				_add_anim(frames, "%s%d" % [anim_name, row], tex, spec, row)
+		else:
+			_add_anim(frames, anim_name, tex, spec, spec["dir"])
 
 	return frames
 
@@ -83,7 +98,8 @@ static func _add_anim(
 	frames: SpriteFrames,
 	anim_name: String,
 	texture: Texture2D,
-	spec: Dictionary
+	spec: Dictionary,
+	row: int
 ) -> void:
 	frames.add_animation(anim_name)
 	frames.set_animation_loop(anim_name, true)
@@ -92,7 +108,6 @@ static func _add_anim(
 	var fw: int     = spec["w"]
 	var fh: int     = spec["h"]
 	var durs: Array = spec["d"]
-	var row: int    = spec["dir"]
 	var y := row * fh
 
 	for i: int in durs.size():

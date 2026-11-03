@@ -1556,7 +1556,7 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
 **Files:**
 - Create: `godot/src/tray/src/tray_extension.cpp`
 - Create: `godot/src/tray/SConstruct`
-- Create: `godot/src/tray/.gdextension`
+- Create: `godot/src/tray/tamapoke_tray.gdextension`
 - Create: `godot/assets/tamapoke.ico` (gerado a partir do ícone do repo)
 - Modify: `.gitignore` (godot-cpp e bin da extensão)
 - Modify: `godot/scripts/app_window.gd` (já preparado na Task 9 — `_setup_tray`)
@@ -1660,9 +1660,9 @@ public:
 		nid.uID              = TRAY_ID;
 		nid.uFlags           = NIF_MESSAGE | NIF_ICON | NIF_TIP;
 		nid.uCallbackMessage = TRAY_MSG;
-		nid.hIcon            = (HICON)LoadImageW(nullptr, icon_path.wide_string().c_str(),
+		nid.hIcon            = (HICON)LoadImageW(nullptr, icon_path.wide_string().get_data(),
 				IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_LOADFROMFILE);
-		wcsncpy_s(nid.szTip, tooltip.wide_string().c_str(), _TRUNCATE);
+		wcsncpy_s(nid.szTip, tooltip.wide_string().get_data(), _TRUNCATE);
 
 		if (nid.hIcon == nullptr) {
 			ERR_PRINT("TrayIcon: não conseguiu carregar o ícone");
@@ -1676,7 +1676,9 @@ public:
 		}
 
 		wm_taskbar_created = RegisterWindowMessageW(L"TaskbarCreated");
-		prev_proc = (WNDPROC)SetWindowLongPtrW(hwnd, GWLP_WNDPROC, (LONG_PTR)_proc);
+		if (prev_proc == nullptr) {
+			prev_proc = (WNDPROC)SetWindowLongPtrW(hwnd, GWLP_WNDPROC, (LONG_PTR)_proc);
+		}
 
 		visible = Shell_NotifyIconW(NIM_ADD, &nid) != FALSE;
 		if (!visible) {
@@ -1687,10 +1689,13 @@ public:
 	void hide_icon() {
 		if (visible && hwnd != nullptr) {
 			Shell_NotifyIconW(NIM_DELETE, &nid);
-			if (prev_proc != nullptr) {
-				SetWindowLongPtrW(hwnd, GWLP_WNDPROC, (LONG_PTR)prev_proc);
-				prev_proc = nullptr;
+			if (nid.hIcon != nullptr) {
+				DestroyIcon(nid.hIcon);
 			}
+		}
+		if (prev_proc != nullptr) {
+			SetWindowLongPtrW(hwnd, GWLP_WNDPROC, (LONG_PTR)prev_proc);
+			prev_proc = nullptr;
 		}
 		if (menu != nullptr) {
 			DestroyMenu(menu);
@@ -1702,12 +1707,20 @@ public:
 
 TrayIcon *TrayIcon::singleton = nullptr;
 
+static void initialize_tray_module(godot::ModuleInitializationLevel p_level) {
+	if (p_level != godot::MODULE_INITIALIZATION_LEVEL_SCENE) {
+		return;
+	}
+	godot::ClassDB::register_class<TrayIcon>();
+}
+
 extern "C" GDExtensionBool GDE_EXPORT tamapoke_tray_library_init(
 		GDExtensionInterfaceGetProcAddress p_get,
 		const GDExtensionClassLibraryPtr p_lib,
 		GDExtensionInitialization *r_init) {
 	godot::GDExtensionBinding::InitObject init_obj(p_get, p_lib, r_init);
-	init_obj.register_class<TrayIcon>();
+	init_obj.register_initializer(initialize_tray_module);
+	init_obj.set_minimum_library_initialization_level(godot::MODULE_INITIALIZATION_LEVEL_SCENE);
 	return init_obj.init();
 }
 ```
@@ -1717,7 +1730,7 @@ extern "C" GDExtensionBool GDE_EXPORT tamapoke_tray_library_init(
 ```python
 #!/usr/bin/env python
 # Build da GDExtension (no Windows, com MSVC e SCons instalados):
-#   git clone --branch 4.7 https://github.com/godotengine/godot-cpp godot-cpp
+#   git clone --branch master https://github.com/godotengine/godot-cpp godot-cpp
 #   scons platform=windows arch=x86_64
 # Saída: bin/tamapoke_tray.dll
 
@@ -1729,7 +1742,7 @@ if env["platform"] == "windows":
 env.SharedLibrary(target="bin/tamapoke_tray", source=["src/tray_extension.cpp"])
 ```
 
-`godot/src/tray/.gdextension`:
+`godot/src/tray/tamapoke_tray.gdextension`:
 
 ```
 [configuration]
@@ -1749,7 +1762,7 @@ No PowerShell:
 
 ```powershell
 cd godot\src\tray
-git clone --branch 4.7 https://github.com/godotengine/godot-cpp godot-cpp
+git clone --branch master https://github.com/godotengine/godot-cpp godot-cpp
 scons platform=windows arch=x86_64
 # Esperado: bin\tamapoke_tray.dll criado
 ```
@@ -1769,7 +1782,7 @@ Run: dar play no projeto (Windows). Esperado:
 - [ ] **Step 5: Commit**
 
 ```bash
-git add godot/src/tray/src/tray_extension.cpp godot/src/tray/SConstruct godot/src/tray/.gdextension godot/assets/tamapoke.ico .gitignore
+git add godot/src/tray/src/tray_extension.cpp godot/src/tray/SConstruct godot/src/tray/tamapoke_tray.gdextension godot/assets/tamapoke.ico .gitignore
 git commit -m "feat(godot): ícone na bandeja via GDExtension (Shell_NotifyIcon)
 
 Co-Authored-By: Claude Code <noreply@anthropic.com>"

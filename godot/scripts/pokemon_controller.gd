@@ -16,12 +16,16 @@ var _seek_zone:  Node  = null
 var _facing:     int   = PmdSpriteLoader.DIR_SOUTH
 var _species_id: String = "0004"
 var _last_level: int    = 1
+var hovered := false  # cursor sobre o bicho (usado pelo balão e pelo arrasto da janela)
 
 @onready var nav: NavigationAgent2D = $NavAgent
 @onready var sprite: AnimatedSprite2D = $Visual
 
 func _ready() -> void:
 	add_to_group("pet")
+	$PetArea.input_event.connect(_on_pet_input)
+	$PetArea.mouse_entered.connect(func(): hovered = true)
+	$PetArea.mouse_exited.connect(func(): hovered = false)
 	_load_sprites()
 	_set_state(State.WANDER)
 
@@ -174,3 +178,34 @@ static func _species_for_level(lvl: int) -> String:
 	if lvl >= 17:
 		return "0005"
 	return "0004"
+
+# ── Carinho ──────────────────────────────────────────────────────────
+
+func _on_pet_input(_viewport: Node, event: InputEvent, _shape_idx: int) -> void:
+	if event is InputEventMouseButton \
+			and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		_pet()
+
+func _pet() -> void:
+	if PetStats.try_pet(Time.get_ticks_msec() / 1000.0):
+		_react()
+
+func _react() -> void:
+	# pulso de escala + corações flutuando
+	var tw := create_tween()
+	tw.tween_property(sprite, "scale", Vector2(1.15, 1.15), 0.08)
+	tw.tween_property(sprite, "scale", Vector2.ONE, 0.12)
+	for i in 3:
+		_heart(Vector2(randf_range(-14.0, 14.0), -34.0))
+
+func _heart(at: Vector2) -> void:
+	var lbl := Label.new()
+	lbl.text = "♥"
+	lbl.modulate = Color(1.0, 0.42, 0.62)
+	lbl.add_theme_font_size_override("font_size", 12)
+	lbl.position = at
+	add_child(lbl)
+	var tw := create_tween()
+	tw.tween_property(lbl, "position", at + Vector2(0, -34), 0.9)
+	tw.parallel().tween_property(lbl, "modulate:a", 0.0, 0.9)
+	tw.tween_callback(lbl.queue_free)

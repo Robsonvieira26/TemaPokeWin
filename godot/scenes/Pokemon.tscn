@@ -1,9 +1,12 @@
-[gd_scene load_steps=3 format=3 uid="uid://pokemon_scene"]
+[gd_scene load_steps=4 format=3 uid="uid://pokemon_scene"]
 
 [ext_resource type="Script" path="res://scripts/pokemon_controller.gd" id="1"]
 
 [sub_resource type="CircleShape2D" id="body_shape"]
 radius = 12.0
+
+[sub_resource type="CircleShape2D" id="hover_shape"]
+radius = 26.0
 
 [node name="Pokemon" type="CharacterBody2D"]
 motion_mode = 1
@@ -19,3 +22,9 @@ position = Vector2(0, -18)
 path_desired_distance = 8.0
 target_desired_distance = 10.0
 radius = 14.0
+
+[node name="PetArea" type="Area2D" parent="."]
+input_pickable = true
+
+[node name="PetAreaShape" type="CollisionShape2D" parent="PetArea"]
+shape = SubResource("hover_shape")

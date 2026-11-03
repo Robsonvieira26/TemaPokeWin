@@ -79,3 +79,11 @@ func test_save_load_roundtrip() -> void:
 	assert_true(saved_at > 0.0, "época do save gravada")
 	ps.free()
 	ps2.free()
+
+func test_hour_override_for_debug() -> void:
+	var ps := _fresh()
+	ps.hour_override = 23.0
+	assert_almost(ps.local_hour_now(), 23.0, 0.001, "override de hora (debug/remoto)")
+	ps.hour_override = 12.0
+	assert_almost(ps.local_hour_now(), 12.0, 0.001, "override segue a hora forçada")
+	ps.free()

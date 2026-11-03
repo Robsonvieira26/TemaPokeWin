@@ -66,7 +66,13 @@ func _do_activity(delta: float) -> void:
 		match active_zone.stat_restore:
 			"hunger": PetStats.restore_hunger(active_zone.restore_rate * delta)
 			"energy": PetStats.restore_energy(active_zone.restore_rate * delta)
+		if active_zone.activity_name == "sleep" \
+				and PetStats.is_night(PetStats.local_hour_now()) \
+				and PetStats.hunger >= HUNGER_LOW:
+			state_timer = maxf(state_timer, 1.0)  # segura na cama
+			PetStats.asleep = true
 	if state_timer <= 0.0:
+		PetStats.asleep = false
 		_set_state(State.WANDER)
 
 func _do_seek() -> void:
@@ -90,7 +96,7 @@ func _navigate() -> bool:
 func _check_need() -> String:
 	if PetStats.hunger < HUNGER_LOW:
 		return "eat"
-	if PetStats.energy < ENERGY_LOW:
+	if PetStats.energy < ENERGY_LOW or PetStats.is_night(PetStats.local_hour_now()):
 		return "sleep"
 	return ""
 
@@ -107,6 +113,7 @@ func _start_seek(zone_name: String) -> void:
 
 func _set_state(new_state: State) -> void:
 	state = new_state
+	PetStats.asleep = false
 	match new_state:
 		State.WANDER:
 			state_timer = 10.0

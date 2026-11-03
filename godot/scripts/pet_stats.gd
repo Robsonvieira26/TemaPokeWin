@@ -32,6 +32,7 @@ var energy: float = 100.0
 var asleep := false            # setado pelo controller (bicho na cama)
 var utc_offset_hours := 0.0    # fuso local; _ready calcula, testes sobrescrevem
 var save_path: String = SAVE_PATH
+var hour_override := -1.0  # >= 0 força a hora local (debug via aba Remote do editor)
 
 var _pet_ready_at := -INF  # engine-time (s) em que o próximo carinho conta
 var _auto_save: Timer
@@ -115,6 +116,12 @@ func simulate_offline(start_epoch: float, now_epoch: float) -> void:
 
 func _local_hour(epoch: float) -> float:
 	return fposmod(epoch / 3600.0 + utc_offset_hours, 24.0)
+
+# Hora local do mundo agora — respeita o override de debug.
+func local_hour_now() -> float:
+	if hour_override >= 0.0:
+		return hour_override
+	return _local_hour(now_epoch())
 
 # Fuso local do sistema, a partir da diferença relógio local × UTC.
 func _system_utc_offset() -> float:

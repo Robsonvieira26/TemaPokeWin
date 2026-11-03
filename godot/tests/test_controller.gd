@@ -47,7 +47,7 @@ func test_progresso_zera_o_contador() -> void:
 	c._stuck_pos = c.position
 	c._track_stuck(0.5)
 	assert_almost(c._stuck_for, 0.5, 0.001, "amostra parada acumula")
-	c.position += Vector2(30, 0)  # ~0,5 s a WALK_SPEED
+	c.position += Vector2(15, 0)  # ~0,5 s a WALK_SPEED
 	c._track_stuck(0.5)
 	assert_almost(c._stuck_for, 0.0, 0.001, "andar 30 px na amostra zera o contador")
 	c.free()

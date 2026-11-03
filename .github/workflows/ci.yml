@@ -17,11 +17,11 @@ jobs:
         with:
           submodules: recursive
       - name: Configure
-        run: cmake -B build -G "Visual Studio 17 2022" -A x64
+        run: cmake -B OLD/build -S OLD -G "Visual Studio 17 2022" -A x64
       - name: Build
-        run: cmake --build build --config Release
+        run: cmake --build OLD/build --config Release
       - name: Test
-        run: ctest --test-dir build -C Release --output-on-failure  # inclui os testes Python (gen_protos, make_icon, iss_lint...)
+        run: ctest --test-dir OLD/build -C Release --output-on-failure  # inclui os testes Python (gen_protos, make_icon, iss_lint...)
 
   package:
     needs: windows
@@ -32,14 +32,14 @@ jobs:
         with:
           submodules: recursive
       - name: Configure
-        run: cmake -B build -G "Visual Studio 17 2022" -A x64
+        run: cmake -B OLD/build -S OLD -G "Visual Studio 17 2022" -A x64
       - name: Build
-        run: cmake --build build --config Release
+        run: cmake --build OLD/build --config Release
       - name: Test
-        run: ctest --test-dir build -C Release --output-on-failure
+        run: ctest --test-dir OLD/build -C Release --output-on-failure
       - name: Package (zip sem sprites)
         shell: pwsh
-        run: tools/package.ps1 -Config Release
+        run: OLD/tools/package.ps1 -Config Release -BuildDir OLD/build -OutDir ..\dist
       - name: Locate Inno Setup
         shell: pwsh
         run: |
@@ -58,9 +58,9 @@ jobs:
       - name: Build installer (sem sprites)
         shell: pwsh
         run: |
-          $ver = (Get-Content build/gen/version.txt -Raw).Trim()
+          $ver = (Get-Content OLD/build/gen/version.txt -Raw).Trim()
           $stage = (Resolve-Path "dist/stage-TamaPoke-$ver-win64/TamaPoke-$ver-win64").Path
-          & $env:ISCC "/DAppVersion=$ver" "/DSourceDir=$stage" installer\tamapoke.iss
+          & $env:ISCC "/DAppVersion=$ver" "/DSourceDir=$stage" OLD/installer/tamapoke.iss
           if ($LASTEXITCODE -ne 0) { throw "ISCC falhou ($LASTEXITCODE)" }
       - name: Upload zip
         uses: actions/upload-artifact@v4

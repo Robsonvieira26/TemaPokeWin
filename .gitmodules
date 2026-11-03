@@ -1,6 +1,6 @@
 [submodule "upstream"]
-	path = upstream
+	path = OLD/upstream
 	url = https://github.com/socquique/TamaPoke
 [submodule "third_party/Arduino_GFX"]
-	path = third_party/Arduino_GFX
+	path = OLD/third_party/Arduino_GFX
 	url = https://github.com/moononournation/Arduino_GFX

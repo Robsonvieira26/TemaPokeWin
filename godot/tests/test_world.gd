@@ -14,6 +14,14 @@ func _centroide(p: PackedVector2Array) -> Vector2:
 		c += v
 	return c / p.size()
 
+func _poligono_nav(poly: NavigationPolygon, i: int) -> PackedVector2Array:
+	# get_polygon(i) devolve ÍNDICES em get_vertices(); converte para pontos.
+	var verts: PackedVector2Array = poly.get_vertices()
+	var pts := PackedVector2Array()
+	for j in poly.get_polygon(i):
+		pts.append(verts[j])
+	return pts
+
 func test_world_instancia_habitat_e_zonas() -> void:
 	var w := _fresh_world()
 	assert_true(w.get_node_or_null("Habitat") != null, "habitat instanciado no World")
@@ -33,7 +41,7 @@ func test_nav_derivado_do_mapa_de_colisao() -> void:
 	assert_true(poly.get_polygon_count() > 0, "polígonos navegáveis gerados")
 	var spawn_inside := false
 	for i in poly.get_polygon_count():
-		if Geometry2D.is_point_in_polygon(SPAWN, poly.get_polygon(i)):
+		if Geometry2D.is_point_in_polygon(SPAWN, _poligono_nav(poly, i)):
 			spawn_inside = true
 	assert_true(spawn_inside, "spawn (950,723) navegável")
 	# centroide de um polígono de água não pode cair na área navegável
@@ -41,7 +49,7 @@ func test_nav_derivado_do_mapa_de_colisao() -> void:
 	var c := _centroide(agua.polygon)
 	var agua_outside := true
 	for i in poly.get_polygon_count():
-		if Geometry2D.is_point_in_polygon(c, poly.get_polygon(i)):
+		if Geometry2D.is_point_in_polygon(c, _poligono_nav(poly, i)):
 			agua_outside = false
 	assert_true(agua_outside, "água fora da área navegável")
 	w.free()

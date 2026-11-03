@@ -4,3 +4,4 @@ out/
 *.user
 settings.json
 dist/
+.superpowers/

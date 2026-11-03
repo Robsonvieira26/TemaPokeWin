@@ -22,3 +22,6 @@ func _ready() -> void:
 
 func random_wander_point() -> Vector2:
 	return wander_points.pick_random()
+
+func _process(_delta: float) -> void:
+	$Camera.position = $Pokemon.position

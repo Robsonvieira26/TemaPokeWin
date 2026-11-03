@@ -1016,6 +1016,7 @@ radius = 34
 radius = 26
 
 [node name="LarDoCharmander" type="Node2D"]
+y_sort_enabled = true
 
 [node name="Terreno" type="Node2D" parent="."]
 
@@ -6570,6 +6571,7 @@ offset = Vector2(0, -42)
 flip_h = true
 
 [node name="Borboletas" type="Node2D" parent="."]
+z_index = 1
 
 [node name="borboleta_branca_1" type="AnimatedSprite2D" parent="Borboletas"]
 position = Vector2(203.5, 150)

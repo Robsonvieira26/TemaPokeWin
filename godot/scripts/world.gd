@@ -6,7 +6,7 @@ extends Node2D
 # O World entra no grupo "world" para o controller achá-lo.
 
 const MAP_RECT := Rect2(8, 8, 1072, 880)   # mapa 1088x896 com margem de segurança
-const FALLBACK_POINT := Vector2(980, 545)  # spawn: dentro da cabana do vale_termal
+const FALLBACK_POINT := Vector2(992, 638)  # spawn: tapete da porta da cabana
 const AGENT_RADIUS := 4.0  # spawn fica a 7 px do banco e o comedouro a 6 px
                            # da mesa de frutas (medido no Colisao); raio maior
                            # engoliria esses pontos na erosão do bake
@@ -74,5 +74,5 @@ func random_wander_point() -> Vector2:
 	return FALLBACK_POINT
 
 func _process(_delta: float) -> void:
-	$Camera.position = $Pokemon.position
+	$Camera.position = $Habitat/Pokemon.position
 	$Camera.zoom = Vector2(zoom_factor, zoom_factor)

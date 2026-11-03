@@ -29,7 +29,8 @@ os erros "GDExtension dynamic library not found".
 
 Com o jogo rodando (aba Remote quando precisar forçar stats). O cenário agora
 é o Vale Termal: comedouro ~ (830, 675), clareira de treino ~ (915, 832),
-cama/abrigo ~ (1020, 648), spawn (950, 723):
+cama/abrigo ~ (1020, 648), spawn no tapete da porta da cabana (992, 638) —
+o bicho nasce dormindo (dentro da zona de sono) e acorda em segundos.
 
 1. Vagar desvia do rio e dos objetos e às vezes cruza a ponte (x 444–634,
    y ~842) e a escada de pedra (pé em 872, 502).

@@ -3,7 +3,7 @@ extends "res://tests/test_base.gd"
 # habitat instanciado, zonas nas marcas do vale e navegação derivada
 # do mapa de colisão embutido na cena (Colisao: Agua/Penhascos/Objetos).
 
-const SPAWN := Vector2(980, 545)  # spawn na cabana do vale_termal
+const SPAWN := Vector2(992, 638)  # tapete da porta da cabana (dentro da SleepZone)
 
 func _fresh_world() -> Node:
 	return load("res://scenes/World.tscn").instantiate()
@@ -71,4 +71,20 @@ func test_spawn_e_zonas_fora_de_colisao() -> void:
 		for pts in outlines:
 			assert_true(not Geometry2D.is_point_in_polygon(pontos[nome], pts),
 					"%s (%s) não pode estar dentro de colisão" % [nome, pontos[nome]])
+	w.free()
+
+func test_spawn_dentro_da_zona_de_sonho() -> void:
+	# Ao iniciar, o bicho nasce no tapete da porta, dentro da SleepZone:
+	# o body_entered dispara no primeiro quadro e ele já entra dormindo,
+	# acordando quando o timer da atividade expira.
+	var w := _fresh_world()
+	var zona: Area2D = null
+	for n in w.get_children():
+		if n.is_in_group("activity_zones") and n.get("activity_name") == "sleep":
+			zona = n
+	assert_true(zona != null, "zona de sono existe")
+	if zona:
+		var shape: RectangleShape2D = zona.get_node("SleepShape").shape
+		var rect := Rect2((zona as Node2D).position - shape.size / 2.0, shape.size)
+		assert_true(rect.has_point(SPAWN), "spawn %s cai na zona de sono %s" % [SPAWN, rect])
 	w.free()

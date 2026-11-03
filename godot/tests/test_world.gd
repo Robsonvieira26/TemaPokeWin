@@ -39,11 +39,14 @@ func test_nav_derivado_do_mapa_de_colisao() -> void:
 	assert_true(w._obstacle_outlines().size() >= 100, "colisões do habitat coletadas (111 esperados)")
 	var poly: NavigationPolygon = w._build_nav_polygon()
 	assert_true(poly.get_polygon_count() > 0, "polígonos navegáveis gerados")
-	var spawn_inside := false
+	var pontos := [SPAWN, Vector2(830, 675), Vector2(915, 832), Vector2(1020, 648)]
+	var navegaveis := {}
 	for i in poly.get_polygon_count():
-		if Geometry2D.is_point_in_polygon(SPAWN, _poligono_nav(poly, i)):
-			spawn_inside = true
-	assert_true(spawn_inside, "spawn (950,723) navegável")
+		for p in pontos:
+			if Geometry2D.is_point_in_polygon(p, _poligono_nav(poly, i)):
+				navegaveis[p] = true
+	for p in pontos:
+		assert_true(navegaveis.has(p), "ponto %s navegável (spawn e centros de zona)" % p)
 	# centroide de um polígono de água não pode cair na área navegável
 	var agua: CollisionPolygon2D = w.get_node("Habitat/Colisao/Agua/agua_1")
 	var c := _centroide(agua.polygon)

@@ -7,7 +7,9 @@ extends Node2D
 
 const MAP_RECT := Rect2(8, 8, 1072, 880)   # mapa 1088x896 com margem de segurança
 const FALLBACK_POINT := Vector2(950, 723)  # spawn do vale_termal
-const AGENT_RADIUS := 8.0                  # erosão leve; o corpo (r=12) fica na física
+const AGENT_RADIUS := 4.0  # spawn fica a 7 px do banco e o comedouro a 6 px
+                           # da mesa de frutas (medido no Colisao); raio maior
+                           # engoliria esses pontos na erosão do bake
 
 func _ready() -> void:
 	$NavRegion.navigation_polygon = _build_nav_polygon()

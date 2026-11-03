@@ -20,7 +20,7 @@ func _build_nav_polygon() -> NavigationPolygon:
 	var src := NavigationMeshSourceGeometryData2D.new()
 	src.add_traversable_outline(_rect_outline(MAP_RECT))
 	for pts in _obstacle_outlines():
-		src.add_obstacle_outline(pts)
+		src.add_obstruction_outline(pts)
 	var poly := NavigationPolygon.new()
 	poly.agent_radius = AGENT_RADIUS
 	NavigationServer2D.bake_from_source_geometry_data(poly, src)

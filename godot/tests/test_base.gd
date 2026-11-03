@@ -3,15 +3,28 @@ extends RefCounted
 
 var _failures: PackedStringArray = []
 var _method := ""
+var _completed := PackedStringArray()  # testes que terminaram sem abortar
+
+# Um teste que aborta (erro de runtime) não executa o append abaixo;
+# run() percebe a ausência do nome em _completed e conta como falha.
+func _call_test(m_name: String) -> void:
+	call(m_name)
+	_completed.append(m_name)
 
 func run() -> int:
 	var suite: String = get_script().resource_path.get_file()
 	var failed := 0
+	_completed = PackedStringArray()
 	for m in get_method_list():
 		if String(m.name).begins_with("test_"):
 			var before := _failures.size()
-			_method = m.name
-			call(m.name)
+			_method = String(m.name)
+			_call_test(_method)
+			if not _completed.has(_method):
+				failed += 1
+				printerr("FAIL  %s.%s" % [suite, _method])
+				printerr("      abortou com erro de runtime")
+				continue
 			if _failures.size() > before:
 				failed += 1
 				printerr("FAIL  %s.%s" % [suite, m.name])

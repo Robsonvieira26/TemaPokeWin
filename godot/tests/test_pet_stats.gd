@@ -63,7 +63,8 @@ func test_offline_xp_cap() -> void:
 	var ps := _fresh()
 	var start := 12.0 * 3600.0  # 48 h de tempo diurno simulado
 	ps.simulate_offline(start, start + 48.0 * 3600.0)
-	assert_almost(ps.xp, 300.0, 0.001, "XP offline limitado ao teto de 300")
+	assert_eq(ps.level, 4, "300 XP offline = 3 níveis")
+	assert_almost(ps.xp, 0.0, 0.001, "XP offline limitado ao teto de 300")
 	ps.free()
 
 func test_save_load_roundtrip() -> void:

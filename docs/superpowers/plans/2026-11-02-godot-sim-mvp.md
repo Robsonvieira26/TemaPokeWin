@@ -1795,7 +1795,13 @@ Co-Authored-By: Claude Code <noreply@anthropic.com>"
 
 - [ ] **Step 1: Suíte headless verde**
 
-Run: `godot --headless --path godot --script res://tests/run_all.gd`
+Run (em clone fresco, primeiro `--import` para gerar o cache de classes globais
+de `PmdSpriteLoader`/`DayNight`, sem o qual os testes não compilam):
+
+```bash
+godot --headless --path godot --import
+godot --headless --path godot --script res://tests/run_all.gd
+```
 Expected: `OK — todos os testes passaram`; exit 0.
 
 - [ ] **Step 2: Afinação visual do jardim (com o jogo aberto, aba Remote)**

@@ -36,8 +36,8 @@ func test_world_instancia_habitat_e_zonas() -> void:
 
 func test_nav_derivado_do_mapa_de_colisao() -> void:
 	var w := _fresh_world()
+	assert_true(w._obstacle_outlines().size() >= 100, "colisões do habitat coletadas (111 esperados)")
 	var poly: NavigationPolygon = w._build_nav_polygon()
-	assert_true(poly.get_outline_count() >= 100, "colisões do habitat viram outlines (111 esperados)")
 	assert_true(poly.get_polygon_count() > 0, "polígonos navegáveis gerados")
 	var spawn_inside := false
 	for i in poly.get_polygon_count():

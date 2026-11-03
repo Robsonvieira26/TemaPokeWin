@@ -7,18 +7,23 @@ extends Node2D
 
 const MAP_RECT := Rect2(8, 8, 1072, 880)   # mapa 1088x896 com margem de segurança
 const FALLBACK_POINT := Vector2(950, 723)  # spawn do vale_termal
+const AGENT_RADIUS := 8.0                  # erosão leve; o corpo (r=12) fica na física
 
 func _ready() -> void:
 	$NavRegion.navigation_polygon = _build_nav_polygon()
 
 func _build_nav_polygon() -> NavigationPolygon:
-	var poly := NavigationPolygon.new()
-	poly.add_outline(_rect_outline(MAP_RECT))
+	# O retângulo do mapa é a área navegável; os polígonos de colisão do
+	# habitat (água, penhascos, objetos) são subtraídos no bake. O pipeline
+	# do NavigationServer2D aceita outlines sobrepostos (os 111 do Colisao
+	# se cruzam; make_polygons_from_outlines não aceitaria).
+	var src := NavigationMeshSourceGeometryData2D.new()
+	src.add_traversable_outline(_rect_outline(MAP_RECT))
 	for pts in _obstacle_outlines():
-		poly.add_outline(pts)
-	# Deprecated em 4.2+, mas é o caminho direto para outlines autorados;
-	# o warning no output é esperado e inofensivo.
-	poly.make_polygons_from_outlines()
+		src.add_obstacle_outline(pts)
+	var poly := NavigationPolygon.new()
+	poly.agent_radius = AGENT_RADIUS
+	NavigationServer2D.bake_from_source_geometry_data(poly, src)
 	return poly
 
 func _rect_outline(r: Rect2) -> PackedVector2Array:
